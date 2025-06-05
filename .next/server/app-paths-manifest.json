@@ -1,0 +1,10 @@
+{
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/proveedores/page": "app/dashboard/proveedores/page.js",
+  "/dashboard/newProductos/page": "app/dashboard/newProductos/page.js",
+  "/dashboard/movimientos/page": "app/dashboard/movimientos/page.js",
+  "/dashboard/informes/page": "app/dashboard/informes/page.js",
+  "/dashboard/usuarioVerif/page": "app/dashboard/usuarioVerif/page.js",
+  "/dashboard/productos/page": "app/dashboard/productos/page.js",
+  "/dashboard/stock/page": "app/dashboard/stock/page.js"
+}
