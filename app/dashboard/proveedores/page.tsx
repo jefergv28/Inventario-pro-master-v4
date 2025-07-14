@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import api from "@/app/hooks/useApi";
 import Footer from "../layout/Footer";
+import axios from "axios";
+import Modal from "@/components/modal/Modal";
 
 interface Proveedor {
   id: number;
@@ -16,6 +18,10 @@ export default function ProveedoresPage() {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [form, setForm] = useState({ nombre: "", contacto: "", direccion: "" });
   const [token] = useState(""); // Asegúrate de obtener el token JWT
+  const [modalAbierto, setModalAbierto] = useState(false);
+const [mensajeModal, setMensajeModal] = useState("");
+
+
 
   // Obtener proveedores al cargar
   useEffect(() => {
@@ -51,12 +57,21 @@ export default function ProveedoresPage() {
   const eliminarProveedor = async (id: number) => {
     try {
       await api.delete(`/proveedores/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true, // ✅ necesario si usas cookies
       });
+
       setProveedores((prev) => prev.filter((p) => p.id !== id));
-    } catch (error) {
-      console.error("Error al eliminar proveedor", error);
-    }
+    } catch (error: unknown) {
+  if (axios.isAxiosError(error)) {
+    const mensaje = error.response?.data || "Error desconocido al eliminar proveedor";
+    setMensajeModal(mensaje);
+    setModalAbierto(true);
+  } else {
+    setMensajeModal("Error inesperado");
+    setModalAbierto(true);
+  }
+}
+
   };
 
   return (
@@ -139,6 +154,12 @@ export default function ProveedoresPage() {
           ))}
         </tbody>
       </table>
+<Modal
+  isOpen={modalAbierto}
+  message={mensajeModal}
+  onClose={() => setModalAbierto(false)}
+  onlyMessage
+/>
 
       <Footer />
     </div>

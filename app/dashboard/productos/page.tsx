@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import api from "@/app/hooks/useApi";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import axios from "axios";
 
 // Componente Modal con Tailwind
 const Modal = ({
@@ -128,12 +129,19 @@ const ProductsPage = () => {
 
       setLocalProductos((prev) => prev.filter((p) => p.id !== productoAEliminar));
       setMensaje("Producto eliminado con éxito.");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 409) {
+          setMensaje("No se puede eliminar el producto porque está asociado a otras entidades (como movimientos).");
+        } else {
+          setMensaje("Error al eliminar producto: " + (err.response?.data || err.message));
+        }
+      } else {
+        setMensaje("Error inesperado al eliminar producto.");
+      }
+    } finally {
       setModalMensajeOpen(true);
       setProductoAEliminar(null);
-    } catch (err) {
-      console.error("Error eliminando producto:", err);
-      setMensaje("No se pudo eliminar el producto.");
-      setModalMensajeOpen(true);
     }
   };
 
