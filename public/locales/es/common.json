@@ -1,0 +1,37 @@
+{
+  "common": {
+    "app_name": "InventarioPRO",
+    "dashboard": "Panel de Control",
+    "products": "Productos",
+    "categories": "Categorías",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión",
+    "search": "Buscar...",
+    "save": "Guardar cambios",
+    "cancel": "Cancelar"
+  },
+  "settings_page": {
+    "title": "Configuración de Usuario",
+    "profile_section_title": "Perfil",
+    "name_label": "Nombre",
+    "email_label": "Correo Electrónico",
+    "language_label": "Idioma",
+    "notifications_label": "Notificaciones",
+    "password_section_title": "Cambiar Contraseña",
+    "current_password_label": "Contraseña actual",
+    "new_password_label": "Nueva contraseña",
+    "confirm_password_label": "Confirmar nueva contraseña",
+    "image_upload_title": "Actualizar Foto de Perfil",
+    "upload_button": "Subir foto",
+    "update_success_message": "Configuración actualizada con éxito."
+  },
+  "products_page": {
+    "title": "Lista de Productos",
+    "add_product_button": "Añadir nuevo producto",
+    "table_header_name": "Nombre",
+    "table_header_category": "Categoría",
+    "table_header_price": "Precio",
+    "table_header_stock": "Stock",
+    "table_header_actions": "Acciones"
+  }
+}

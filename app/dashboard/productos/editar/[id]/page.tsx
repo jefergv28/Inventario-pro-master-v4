@@ -273,7 +273,7 @@ const EditProductPage = () => {
 
         <Button
           type="submit"
-          variant="default"
+          variant="destructive"
           disabled={loading}
           className="w-full"
         >

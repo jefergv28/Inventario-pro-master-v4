@@ -1,0 +1,37 @@
+{
+  "common": {
+    "app_name": "InventarPRO",
+    "dashboard": "Armaturenbrett",
+    "products": "Produkte",
+    "categories": "Kategorien",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "search": "Suchen...",
+    "save": "Änderungen speichern",
+    "cancel": "Abbrechen"
+  },
+  "settings_page": {
+    "title": "Benutzereinstellungen",
+    "profile_section_title": "Profil",
+    "name_label": "Name",
+    "email_label": "E-Mail",
+    "language_label": "Sprache",
+    "notifications_label": "Benachrichtigungen",
+    "password_section_title": "Passwort ändern",
+    "current_password_label": "Aktuelles Passwort",
+    "new_password_label": "Neues Passwort",
+    "confirm_password_label": "Neues Passwort bestätigen",
+    "image_upload_title": "Profilbild aktualisieren",
+    "upload_button": "Foto hochladen",
+    "update_success_message": "Einstellungen erfolgreich aktualisiert."
+  },
+  "products_page": {
+    "title": "Produktliste",
+    "add_product_button": "Neues Produkt hinzufügen",
+    "table_header_name": "Name",
+    "table_header_category": "Kategorie",
+    "table_header_price": "Preis",
+    "table_header_stock": "Lagerbestand",
+    "table_header_actions": "Aktionen"
+  }
+}

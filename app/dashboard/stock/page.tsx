@@ -71,7 +71,10 @@ export default function StockPage() {
   };
 
   const cargarParaEditar = (stock: Stock) => {
+    console.log("Editando stock:", stock);
+
     setStockEditando(stock);
+
     setForm({
       productoId: stock.productoId.toString(),
       cantidadDisponible: stock.cantidadDisponible.toString(),
@@ -116,11 +119,10 @@ export default function StockPage() {
             s.id === stockEditando.id
               ? {
                   ...response.data,
-                  productoNombre:
-                    productos.find((p) => p.id === response.data.producto.id)?.nombreProducto || "Desconocido",
+                  productoNombre: productos.find((p) => p.id === response.data.producto.id)?.nombreProducto || "Desconocido",
                 }
-              : s
-          )
+              : s,
+          ),
         );
 
         setStockEditando(null);
@@ -132,8 +134,7 @@ export default function StockPage() {
 
         const nuevoStock = {
           ...response.data,
-          productoNombre:
-            productos.find((p) => p.id === response.data.producto.id)?.nombreProducto || "Desconocido",
+          productoNombre: productos.find((p) => p.id === response.data.producto.id)?.nombreProducto || "Desconocido",
         };
 
         setStocks((prev) => [...prev, nuevoStock]);
@@ -169,9 +170,7 @@ export default function StockPage() {
 
       {/* Formulario para agregar/editar stock */}
       <div className="max-w-md space-y-3 rounded border border-gray-300 p-4 dark:border-gray-600">
-        <h2 className="text-xl font-semibold text-gray-700 dark:text-white">
-          {stockEditando ? "Editar Stock" : "Agregar Stock"}
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-700 dark:text-white">{stockEditando ? "Editar Stock" : "Agregar Stock"}</h2>
 
         <select
           name="productoId"
@@ -180,11 +179,17 @@ export default function StockPage() {
           className="w-full rounded border border-gray-400 p-2 text-black dark:bg-gray-900 dark:text-white"
           disabled={!!stockEditando} // No permitir cambiar producto al editar
         >
-          <option value="" disabled>
+          <option
+            value=""
+            disabled
+          >
             Selecciona un producto
           </option>
           {productos.map((p) => (
-            <option key={p.id} value={p.id}>
+            <option
+              key={p.id}
+              value={p.id}
+            >
               {p.nombreProducto}
             </option>
           ))}
@@ -260,7 +265,7 @@ export default function StockPage() {
                 transition={{ delay: index * 0.05 }}
                 className="border-b border-gray-300 dark:border-gray-600"
               >
-                <td className="px-4 py-2 text-gray-800 dark:text-white">{stock.productoNombre}</td>
+                <td className="px-4 py-2 text-gray-800 dark:text-white"> {stock.productoNombre}</td>
                 <td className="px-4 py-2 text-gray-800 dark:text-white">{stock.cantidadDisponible}</td>
                 <td className="px-4 py-2 text-gray-800 dark:text-white">{stock.cantidadMinima}</td>
                 <td className="px-4 py-2 text-gray-800 dark:text-white">{stock.cantidadMaxima}</td>

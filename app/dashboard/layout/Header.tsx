@@ -14,13 +14,17 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ collapsed, setCollapsed }) => {
   const { theme, setTheme } = useTheme();
-  const { logout } = useNetAuth(); // 👈 Obtenemos logout y user
+  const { usuario, logout } = useNetAuth();
   const [isFocused, setIsFocused] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout(); // 👈 Usamos el logout de Netlify Identity
   };
+
+  console.log("Objeto usuario en Header:", usuario);
+  const imageUrl = `http://localhost:8000${usuario?.profilePicture || "/uploads/profile-image.jpg"}`;
+  console.log("URL de la imagen generada:", imageUrl);
 
   return (
     <header className="relative z-10 flex h-[60px] items-center justify-between bg-white px-4 shadow-md transition-colors dark:bg-slate-950">
@@ -75,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({ collapsed, setCollapsed }) => {
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <Image
-              src="/profile-image.jpg"
+              src={imageUrl}
               alt="Perfil"
               width={40}
               height={40}

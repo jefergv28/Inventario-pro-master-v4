@@ -35,6 +35,8 @@ const Modal = ({
 }) => {
   if (!isOpen) return null;
 
+  
+
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black bg-opacity-50 backdrop-blur-sm" />
@@ -123,19 +125,22 @@ const ProductsPage = () => {
       const token = Cookies.get("token");
       if (!token) throw new Error("Usuario no autenticado");
 
-      await api.delete(`/productos/${productoAEliminar}`, {
+      const response = await api.delete(`/productos/${productoAEliminar}`, {
         headers: { Authorization: `Bearer ${token}` },
+        validateStatus: () => true,
       });
 
-      setLocalProductos((prev) => prev.filter((p) => p.id !== productoAEliminar));
-      setMensaje("Producto eliminado con éxito.");
+      if (response.status === 200 || response.status === 204) {
+        setLocalProductos((prev) => prev.filter((p) => p.id !== productoAEliminar));
+        setMensaje("Producto eliminado con éxito.");
+      } else if (response.status === 409) {
+        setMensaje("No se puede eliminar el producto porque está asociado a otras entidades (como movimientos).");
+      } else {
+        setMensaje(`Error del servidor: ${response.status}`);
+      }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        if (err.response?.status === 409) {
-          setMensaje("No se puede eliminar el producto porque está asociado a otras entidades (como movimientos).");
-        } else {
-          setMensaje("Error al eliminar producto: " + (err.response?.data || err.message));
-        }
+        setMensaje("Error al eliminar producto: " + (err.response?.data || err.message));
       } else {
         setMensaje("Error inesperado al eliminar producto.");
       }
@@ -229,11 +234,11 @@ const ProductsPage = () => {
                       transition={{ duration: 0.3, delay: index * 0.1 }}
                     >
                       <td className="table-cell">
-                        {product.imageUrl && product.imageUrl.startsWith("/uploads") ? (
+                        {product.imageUrl ? (
                           <Image
-                            src={`http://localhost:8000${product.imageUrl}`} // ✅ Usa "product", que sí está definido
+                            src={product.imageUrl.startsWith("http") ? product.imageUrl : `http://localhost:8000${product.imageUrl}`}
                             alt={product.nombreProducto}
-                            width={48} // 12 * 4 (tailwind 12 = 3rem = 48px)
+                            width={48}
                             height={48}
                             className="rounded object-cover"
                           />
@@ -241,6 +246,7 @@ const ProductsPage = () => {
                           <span className="text-gray-400">Sin imagen</span>
                         )}
                       </td>
+
                       <td className="table-cell">{product.nombreProducto}</td>
                       <td className="table-cell">{product.cantidadProducto}</td>
                       <td className="table-cell">

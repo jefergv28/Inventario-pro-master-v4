@@ -1,9 +1,7 @@
 {
+  "/page": "app/page.js",
   "/auth/login/page": "app/auth/login/page.js",
-  "/dashboard/movimientos/page": "app/dashboard/movimientos/page.js",
   "/dashboard/productos/page": "app/dashboard/productos/page.js",
-  "/dashboard/stock/page": "app/dashboard/stock/page.js",
-  "/dashboard/proveedores/page": "app/dashboard/proveedores/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/newProductos/page": "app/dashboard/newProductos/page.js"
+  "/dashboard/settings/page": "app/dashboard/settings/page.js"
 }

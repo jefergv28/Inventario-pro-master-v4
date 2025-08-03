@@ -28,50 +28,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
-    "/dashboard/usuario/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/usuario/page.js"
-    ],
-    "/dashboard/newuser/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/newuser/page.js"
-    ],
-    "/dashboard/usuarioVerif/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/usuarioVerif/page.js"
-    ],
     "/dashboard/productos/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/productos/page.js"
     ],
-    "/dashboard/newProductos/page": [
+    "/dashboard/settings/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/newProductos/page.js"
-    ],
-    "/dashboard/proveedores/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/proveedores/page.js"
-    ],
-    "/dashboard/productos/editar/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/productos/editar/[id]/page.js"
-    ],
-    "/dashboard/stock/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/stock/page.js"
-    ],
-    "/dashboard/movimientos/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/movimientos/page.js"
+      "static/chunks/app/dashboard/settings/page.js"
     ]
   }
 }

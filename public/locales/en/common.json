@@ -1,0 +1,37 @@
+{
+  "common": {
+    "app_name": "InventoryPRO",
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "categories": "Categories",
+    "settings": "Settings",
+    "logout": "Logout",
+    "search": "Search...",
+    "save": "Save changes",
+    "cancel": "Cancel"
+  },
+  "settings_page": {
+    "title": "User Settings",
+    "profile_section_title": "Profile",
+    "name_label": "Name",
+    "email_label": "Email",
+    "language_label": "Language",
+    "notifications_label": "Notifications",
+    "password_section_title": "Change Password",
+    "current_password_label": "Current Password",
+    "new_password_label": "New Password",
+    "confirm_password_label": "Confirm New Password",
+    "image_upload_title": "Update Profile Picture",
+    "upload_button": "Upload photo",
+    "update_success_message": "Settings updated successfully."
+  },
+  "products_page": {
+    "title": "Product List",
+    "add_product_button": "Add new product",
+    "table_header_name": "Name",
+    "table_header_category": "Category",
+    "table_header_price": "Price",
+    "table_header_stock": "Stock",
+    "table_header_actions": "Actions"
+  }
+}

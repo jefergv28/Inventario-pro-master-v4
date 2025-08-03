@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import useAgregarProducto from "@/app/hooks/useAgregarProducto";
 import { Producto } from "@/app/services/agregarProducto";
 import Cookies from "js-cookie";
+import Modal from "@/components/modal/Modal";
 
 interface Categoria {
   id: number;
@@ -25,7 +26,7 @@ interface Proveedor {
 
 const NewProductPage = () => {
   const router = useRouter();
-  const { agregarProducto, loading, error } = useAgregarProducto();
+  const { agregarProducto, loading, error, setError } = useAgregarProducto();
 
   const [product, setProduct] = useState({
     name: "",
@@ -129,6 +130,16 @@ const NewProductPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const archivo = product.image;
+
+    if (archivo && archivo instanceof File) {
+      const tipoPermitido = ["image/png", "image/jpeg", "image/jpg"];
+
+      if (!tipoPermitido.includes(archivo.type)) {
+        setError("Solo se permiten imágenes PNG, JPG o JPEG.");
+        return;
+      }
+    }
     if (!validate()) return;
 
     try {
@@ -249,7 +260,7 @@ const NewProductPage = () => {
         {/* Imagen */}
         <input
           type="file"
-          accept="image/*"
+          accept="image/png, image/jpeg, image/jpg"
           onChange={handleImageChange}
           className={`input w-full ${errors.image ? "border-red-500" : ""}`}
         />
@@ -267,13 +278,20 @@ const NewProductPage = () => {
 
         <Button
           type="submit"
-          variant="destructive"
+          variant="secondary"
           disabled={loading}
           className="w-full"
         >
           {loading ? "Agregando..." : "Agregar Producto"}
         </Button>
       </form>
+      <Modal
+        isOpen={!!error}
+        title="Error al agregar producto"
+        message={error}
+        onlyMessage
+        onClose={() => setError(null)} // ← correcto
+      />
     </div>
   );
 };
