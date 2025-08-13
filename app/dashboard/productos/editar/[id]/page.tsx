@@ -54,7 +54,7 @@ const EditProductPage = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   useEffect(() => {
     if (!productIdString) return;
 
@@ -67,11 +67,9 @@ const EditProductPage = () => {
           throw new Error("Usuario no autenticado");
         }
 
-        const response = await fetch(`http://localhost:8000/productos/${productIdString}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+       const response = await fetch(`${API_URL}/productos/${productIdString}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
         if (!response.ok) throw new Error("Error al obtener el producto");
 
@@ -92,12 +90,12 @@ const EditProductPage = () => {
     };
 
     fetchProducto();
-  }, [productIdString]);
+  }, [API_URL, productIdString]);
 
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const res = await fetch("http://localhost:8000/categorias");
+        const res = await fetch("http://NEXT_PUBLIC_API_URL/categorias");
         if (!res.ok) throw new Error("Error al obtener categorías");
         const data = await res.json();
         setCategorias(data);
@@ -113,7 +111,7 @@ const EditProductPage = () => {
     const fetchProveedores = async () => {
       try {
         const token = Cookies.get("token");
-        const res = await fetch("http://localhost:8000/proveedores", {
+        const res = await fetch("http://NEXT_PUBLIC_API_URL/proveedores", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

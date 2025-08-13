@@ -51,11 +51,13 @@ const NewProductPage = () => {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
 
-  // Traer categorías
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";
+
+  // Categorías
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const response = await fetch("http://localhost:8000/categorias");
+        const response = await fetch(`${backendUrl}/categorias`);
         if (!response.ok) {
           throw new Error(`Error al obtener categorías`);
         }
@@ -67,16 +69,16 @@ const NewProductPage = () => {
     };
 
     fetchCategorias();
-  }, []);
+  }, [backendUrl]);
 
-  // Traer proveedores
+  // Proveedores
   useEffect(() => {
     const fetchProveedores = async () => {
       try {
         const token = Cookies.get("token");
         if (!token) throw new Error("No se encontró token de autenticación");
 
-        const response = await fetch("http://localhost:8000/proveedores", {
+        const response = await fetch(`${backendUrl}/proveedores`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -95,7 +97,7 @@ const NewProductPage = () => {
     };
 
     fetchProveedores();
-  }, []);
+  }, [backendUrl]);
 
   const validate = () => {
     const newErrors = {
@@ -153,27 +155,25 @@ const NewProductPage = () => {
         image: product.image,
       };
 
-     const success = await agregarProducto(producto);
+      const success = await agregarProducto(producto);
 
-     if (success){
-      setSuccessMessage("¡Producto agregado correctamente!");
-      setTimeout(() => {
-        router.push("/dashboard/productos");
-      }, 1500);
+      if (success) {
+        setSuccessMessage("¡Producto agregado correctamente!");
+        setTimeout(() => {
+          router.push("/dashboard/productos");
+        }, 1500);
 
-      setProduct({
-        name: "",
-        quantity: 0,
-        description: "",
-        category: 0,
-        provider: 0,
-        price: 0,
-        image: null,
-      })
-    }
-    } catch {
-
-    }
+        setProduct({
+          name: "",
+          quantity: 0,
+          description: "",
+          category: 0,
+          provider: 0,
+          price: 0,
+          image: null,
+        });
+      }
+    } catch {}
   };
 
   return (

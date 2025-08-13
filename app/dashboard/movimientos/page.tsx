@@ -36,7 +36,9 @@ const MovementHistoryPage = () => {
   useEffect(() => {
     const fetchMovements = async () => {
       try {
-        const res = await axios.get<MovimientoBackend[]>("http://localhost:8000/historial", {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";
+
+        const res = await axios.get<MovimientoBackend[]>(`${backendUrl}/historial`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
 

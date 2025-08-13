@@ -22,8 +22,6 @@ const SettingsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false); // Nuevo estado para la visibilidad de la contraseña
 
-
-
   const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -147,7 +145,11 @@ const SettingsPage = () => {
               <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-gray-300 dark:border-white">
                 <Image
                   // AQUI ESTÁ EL CAMBIO CLAVE: Aseguramos que la URL siempre sea completa
-                  src={usuario?.profilePicture ? `http://localhost:8000${usuario.profilePicture}` : `http://localhost:8000/uploads/profile-image.jpg`}
+                  src={
+                    usuario?.profilePicture
+                      ? `http://NEXT_PUBLIC_API_URL${usuario.profilePicture}`
+                      : `http://NEXT_PUBLIC_API_URL/uploads/profile-image.jpg`
+                  }
                   alt="Foto de perfil"
                   width={80}
                   height={80}
@@ -164,7 +166,7 @@ const SettingsPage = () => {
 
             <label className="block text-black dark:text-white">
               Nombre de usuario:
-              <p className="bg-muted text-muted-foreground w-full py-2">{usuario?.name}</p>
+              <p className="w-full bg-muted py-2 text-muted-foreground">{usuario?.name}</p>
             </label>
 
             <button

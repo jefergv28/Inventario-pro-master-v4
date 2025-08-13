@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookie from "js-cookie";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000", // Cambia al puerto de tu backend Spring Boot
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL",
 });
 
 api.interceptors.request.use(

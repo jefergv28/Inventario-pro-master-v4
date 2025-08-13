@@ -32,7 +32,9 @@ const useEditarProducto = (): UseEditarProductoResult => {
       const token = Cookies.get("token");
       if (!token) throw new Error("No se encontró token de autenticación");
 
-      const response = await fetch(`http://localhost:8000/productos/${id}`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+      const response = await fetch(`${API_URL}/productos/${id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

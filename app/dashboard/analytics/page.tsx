@@ -32,8 +32,7 @@ const AnalyticsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const backendUrl = "http://localhost:8000/api/analiticas";
-
+        const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/analiticas`;
         const token = Cookies.get("token");
         const headers = {
           Authorization: `Bearer ${token}`,

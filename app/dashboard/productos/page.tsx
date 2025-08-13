@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Filter, Edit, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import useProductos from "@/app/hooks/useProductos";
-import Cookies from "js-cookie";
 import api from "@/app/hooks/useApi";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
 import { useNotification } from "@/app/context/NotificationContext";
+
+// Backend URL configurable
+const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";
 
 // Componente Modal con Tailwind
 const Modal = ({
@@ -122,29 +124,29 @@ const ProductsPage = () => {
     setModalOpen(false);
 
     try {
-      const token = Cookies.get("token");
-      if (!token) throw new Error("Usuario no autenticado");
-
+      // Usamos api que ya tiene interceptor para el token, no hace falta pasarlo manual
       const response = await api.delete(`/productos/${productoAEliminar}`, {
-        headers: { Authorization: `Bearer ${token}` },
         validateStatus: () => true,
       });
 
       if (response.status === 200 || response.status === 204) {
         setLocalProductos((prev) => prev.filter((p) => p.id !== productoAEliminar));
         setMensaje("Producto eliminado con éxito.");
-           addNotification("Producto eliminado con éxito.", "success");
+        addNotification("Producto eliminado con éxito.", "success");
       } else if (response.status === 409) {
         setMensaje("No se puede eliminar el producto porque está asociado a otras entidades (como movimientos).");
         addNotification("No se puede eliminar el producto porque está asociado a otras entidades.", "error");
       } else {
         setMensaje(`Error del servidor: ${response.status}`);
+        addNotification(`Error del servidor: ${response.status}`, "error");
       }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setMensaje("Error al eliminar producto: " + (err.response?.data || err.message));
+        addNotification("Error al eliminar producto: " + (err.response?.data || err.message), "error");
       } else {
         setMensaje("Error inesperado al eliminar producto.");
+        addNotification("Error inesperado al eliminar producto.", "error");
       }
     } finally {
       setModalMensajeOpen(true);
@@ -238,7 +240,7 @@ const ProductsPage = () => {
                       <td className="table-cell">
                         {product.imageUrl ? (
                           <Image
-                            src={product.imageUrl.startsWith("http") ? product.imageUrl : `http://localhost:8000${product.imageUrl}`}
+                            src={product.imageUrl.startsWith("http") ? product.imageUrl : `${backendUrl}${product.imageUrl}`}
                             alt={product.nombreProducto}
                             width={48}
                             height={48}

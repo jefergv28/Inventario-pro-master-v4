@@ -16,13 +16,7 @@ interface HeaderProps {
   setIsFocused: (value: boolean) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  collapsed,
-  setCollapsed,
-  searchText,
-  setSearchText,
-  setIsFocused,
-}) => {
+const Header: React.FC<HeaderProps> = ({ collapsed, setCollapsed, searchText, setSearchText, setIsFocused }) => {
   const { theme, setTheme } = useTheme();
   const { usuario, logout } = useNetAuth();
 
@@ -35,9 +29,9 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleLogout = () => logout();
 
-  const imageUrl = `http://localhost:8000${
-    usuario?.profilePicture || "/uploads/profile-image.jpg"
-  }`;
+  const backendBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";
+
+  const imageUrl = `${backendBaseUrl}${usuario?.profilePicture || "/uploads/profile-image.jpg"}`;
 
   return (
     <header className="relative z-10 flex h-[60px] items-center justify-between bg-white px-4 shadow-md transition-colors dark:bg-slate-950">
@@ -55,7 +49,10 @@ const Header: React.FC<HeaderProps> = ({
           animate={{ width: "auto", height: 35 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          <Search size={20} className="text-slate-400" />
+          <Search
+            size={20}
+            className="text-slate-400"
+          />
           <input
             type="text"
             placeholder="Buscar..."
@@ -73,8 +70,14 @@ const Header: React.FC<HeaderProps> = ({
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           aria-label="Cambiar tema"
         >
-          <Sun size={20} className="dark:hidden" />
-          <Moon size={20} className="hidden dark:block" />
+          <Sun
+            size={20}
+            className="dark:hidden"
+          />
+          <Moon
+            size={20}
+            className="hidden dark:block"
+          />
         </button>
 
         <div className="relative">
@@ -96,12 +99,10 @@ const Header: React.FC<HeaderProps> = ({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute right-0 mt-2 w-64 max-h-64 overflow-auto rounded-md border bg-white p-4 shadow-md dark:border-slate-700 dark:bg-slate-900 z-50"
+              className="absolute right-0 z-50 mt-2 max-h-64 w-64 overflow-auto rounded-md border bg-white p-4 shadow-md dark:border-slate-700 dark:bg-slate-900"
             >
               {notifications.length === 0 ? (
-                <p className="text-gray-700 dark:text-gray-300">
-                  No tienes nuevas notificaciones.
-                </p>
+                <p className="text-gray-700 dark:text-gray-300">No tienes nuevas notificaciones.</p>
               ) : (
                 notifications.map(({ id, message }) => (
                   <div
