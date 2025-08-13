@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Cookies from "js-cookie";
 import { Producto } from "@/app/services/agregarProducto";
 import useEditarProducto from "@/app/hooks/useEditarProducto";
+import { useNotification } from "@/app/context/NotificationContext";
 
 interface Categoria {
   id: number;
@@ -25,6 +26,7 @@ interface Proveedor {
 
 const EditProductPage = () => {
   const router = useRouter();
+  const { addNotification } = useNotification();
   const { id: productId } = useParams();
   const productIdString = Array.isArray(productId) ? productId[0] : productId;
 
@@ -171,7 +173,9 @@ const EditProductPage = () => {
     };
 
     await editarProducto(productIdString, producto);
-    setSuccessMessage("¡Producto actualizado correctamente!");
+    const mensajeExito = "¡Producto actualizado correctamente!";
+    setSuccessMessage(mensajeExito);
+    addNotification(mensajeExito, "success");
     setTimeout(() => {
       router.push("/dashboard/productos");
     }, 1500);

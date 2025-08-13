@@ -1,135 +1,128 @@
 "use client";
-import { mockReports } from "@/app/constants";
-import { Button } from "@/components/ui/button";
-import { Download, Upload, Filter } from "lucide-react";
-import Image from "next/image";
-import Footer from "../layout/Footer";
-import { motion } from "framer-motion";
 
-const ReportsPage = () => {
+import { useState } from "react";
+import { motion } from "framer-motion";
+import Footer from "../layout/Footer";
+import { AxiosRequestConfig } from "axios"; // <-- Importa el tipo de configuración de Axios
+import api from "@/app/hooks/useApi";
+
+// Se usan para la animación de los botones
+const buttonVariants = {
+  hover: { scale: 1.05 },
+  tap: { scale: 0.95 },
+};
+
+// Esta es la ruta base para tu API de reportes.
+const backendUrl = "/api/inventory-reports";
+
+// Define la estructura de la respuesta de tu backend
+interface ReportDTO {
+  id: number;
+  reportName: string;
+  filename: string;
+  reportType: "pdf" | "excel";
+  createdAt: string;
+}
+
+const InformesPage = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Función para descargar archivos
+  const handleDownload = (data: Blob, filename: string) => {
+    const url = window.URL.createObjectURL(new Blob([data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Función genérica para generar y descargar reportes
+  const generateAndDownloadReport = async (reportType: "pdf" | "excel") => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const generateResponse = await api.post<ReportDTO>(
+        `${backendUrl}/generate-${reportType}`,
+        {}
+      );
+
+      const filename = generateResponse.data.filename;
+
+      // --- CORRECCIÓN AQUÍ ---
+      // Se tipifica la constante con 'AxiosRequestConfig' para resolver el error
+      const downloadConfig: AxiosRequestConfig = {
+        responseType: "blob", // El tipo 'blob' es aceptado ahora
+      };
+
+      const downloadResponse = await api.get(
+        `${backendUrl}/download/${filename}`,
+        downloadConfig
+      );
+      // --- FIN DE LA CORRECCIÓN ---
+
+      handleDownload(downloadResponse.data, filename);
+
+      setLoading(false);
+    } catch (err) {
+      console.error(`Error al generar o descargar el informe de ${reportType}:`, err);
+      setError(`Ocurrió un error al generar el informe de ${reportType}.`);
+      setLoading(false);
+    }
+  };
+
   return (
     <motion.div
-      className="space-y-6 p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      className="flex min-h-screen flex-col items-center justify-center bg-white p-6 dark:bg-gray-900"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="card-header">
-        <p className="title">Informes</p>
-      </div>
+      <div className="card w-full max-w-lg rounded-2xl p-8 shadow-2xl dark:shadow-none">
+        <h1 className="mb-6 text-center text-3xl font-bold text-gray-800 dark:text-white">
+          Generar Informes
+        </h1>
+        <p className="mb-8 text-center text-gray-600 dark:text-gray-400">
+          Selecciona el tipo de informe que deseas generar.
+        </p>
 
-      {/* Filtros avanzados */}
-      <div className="flex items-center gap-4">
-        <input
-          type="date"
-          placeholder="Fecha inicio"
-          className="text-black dark:text-white"
-        />
-        <input
-          type="date"
-          placeholder="Fecha fin"
-          className="text-black dark:text-white"
-        />
-        <Button variant="outline">
-          <Filter className="mr-2 h-5 w-5" />
-          Filtrar
-        </Button>
-      </div>
+        <div className="flex flex-col space-y-4">
+          <motion.button
+            className="w-full rounded-full bg-red-600 px-6 py-3 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-red-700 disabled:opacity-50 dark:bg-red-700 dark:hover:bg-red-800"
+            onClick={() => generateAndDownloadReport("pdf")}
+            disabled={loading}
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
+          >
+            {loading ? "Generando PDF..." : "Generar PDF"}
+          </motion.button>
 
-      {/* Tabla de informes */}
-      <div className="card">
-        <div className="card-body p-0">
-          <div className="relative h-[500px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
-            <table className="table">
-              <thead className="table-header">
-                <tr className="table-row">
-                  <th className="table-head">Fecha</th>
-                  <th className="table-head">Tipo</th>
-                  <th className="table-head">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="table-body">
-                {mockReports.map((report, i) => (
-                  <motion.tr
-                    key={report.id}
-                    className="table-row"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: i * 0.1 }}
-                  >
-                    <td className="table-cell">{report.date}</td>
-                    <td className="table-cell">{report.type}</td>
-                    <td className="table-cell">
-                      <Button variant="outline">
-                        <Download className="mr-2 h-5 w-5" />
-                        PDF
-                      </Button>
-                      <Button variant="outline">
-                        <Download className="mr-2 h-5 w-5" />
-                        Excel
-                      </Button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <motion.button
+            className="w-full rounded-full bg-green-600 px-6 py-3 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-green-700 disabled:opacity-50 dark:bg-green-700 dark:hover:bg-green-800"
+            onClick={() => generateAndDownloadReport("excel")}
+            disabled={loading}
+            variants={buttonVariants}
+            whileHover="hover"
+            whileTap="tap"
+          >
+            {loading ? "Generando Excel..." : "Generar Excel"}
+          </motion.button>
         </div>
-      </div>
 
-      {/* Botones de Importación y Exportación */}
-      <div className="mt-6 flex flex-wrap gap-4 text-black dark:text-white">
-        <Button variant="secondary">
-          <Upload className="mr-2 h-5 w-5" />
-          Importar desde Google Drive
-          <Image
-            src="/integrations/google_drive.svg"
-            alt="Google Drive"
-            width={20}
-            height={20}
-            className="ml-2"
-          />
-        </Button>
-        <Button variant="secondary">
-          <Upload className="mr-2 h-5 w-5" />
-          Importar desde Dropbox
-          <Image
-            src="/integrations/dropbox.svg"
-            alt="Dropbox"
-            width={20}
-            height={20}
-            className="ml-2"
-          />
-        </Button>
-      </div>
-
-      <div className="mt-2 flex flex-wrap gap-4 text-black dark:text-white">
-        <Button variant="secondary">
-          <Download className="mr-2 h-5 w-5" />
-          Exportar a Google Drive
-          <Image
-            src="/integrations/google_drive.svg"
-            alt="Google Drive"
-            width={20}
-            height={20}
-            className="ml-2"
-          />
-        </Button>
-        <Button variant="secondary">
-          <Download className="mr-2 h-5 w-5" />
-          Exportar a Dropbox
-          <Image
-            src="/integrations/dropbox.svg"
-            alt="Dropbox"
-            width={20}
-            height={20}
-            className="ml-2"
-          />
-        </Button>
+        {error && (
+          <div className="mt-6 rounded-lg bg-red-100 p-4 text-center text-red-700 dark:bg-red-900 dark:text-red-300">
+            {error}
+          </div>
+        )}
       </div>
       <Footer />
     </motion.div>
   );
 };
 
-export default ReportsPage;
+export default InformesPage;

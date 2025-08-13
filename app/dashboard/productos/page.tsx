@@ -10,6 +10,7 @@ import api from "@/app/hooks/useApi";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
+import { useNotification } from "@/app/context/NotificationContext";
 
 // Componente Modal con Tailwind
 const Modal = ({
@@ -34,8 +35,6 @@ const Modal = ({
   onlyMessage?: boolean;
 }) => {
   if (!isOpen) return null;
-
-  
 
   return (
     <>
@@ -79,6 +78,7 @@ const Modal = ({
 
 const ProductsPage = () => {
   const { productos = [], loading, error } = useProductos();
+  const { addNotification } = useNotification();
   const [filterCategory, setFilterCategory] = useState("Todos");
   const [filterProvider, setFilterProvider] = useState("Todos");
   const [localProductos, setLocalProductos] = useState(productos);
@@ -133,8 +133,10 @@ const ProductsPage = () => {
       if (response.status === 200 || response.status === 204) {
         setLocalProductos((prev) => prev.filter((p) => p.id !== productoAEliminar));
         setMensaje("Producto eliminado con éxito.");
+           addNotification("Producto eliminado con éxito.", "success");
       } else if (response.status === 409) {
         setMensaje("No se puede eliminar el producto porque está asociado a otras entidades (como movimientos).");
+        addNotification("No se puede eliminar el producto porque está asociado a otras entidades.", "error");
       } else {
         setMensaje(`Error del servidor: ${response.status}`);
       }

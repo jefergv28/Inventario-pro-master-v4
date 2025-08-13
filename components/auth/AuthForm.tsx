@@ -10,7 +10,9 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import SocialAuth from "./SocialAuth";
 import Cookie from "js-cookie";
 import api from "@/app/hooks/useApi";
-// Ajusta ruta
+import Modal from "../modal/Modal"; // Ajusta la ruta si es necesario
+import ForgotPasswordForm from "@/app/auth/ForgotPasswordForm/page";
+
 
 type AuthFormProps = {
   type: "login" | "register";
@@ -21,14 +23,22 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const [fullName, setFullName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+
+  // ¡CORRECCIÓN AQUÍ! Se declaran los estados por separado
   const [errors, setErrors] = useState<{
     fullName?: string;
     email?: string;
     password?: string;
   }>({});
   const [feedback, setFeedback] = useState<string>("");
+  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
 
   const router = useRouter();
+
+  // Función para cerrar el modal después de un envío exitoso
+  const handleForgotPasswordSuccess = () => {
+    setIsForgotPasswordModalOpen(false);
+  };
 
   // Validaciones igual que antes...
   const validateFullName = (value: string): string => {
@@ -157,6 +167,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
           {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
         </div>
 
+        {type === "login" && ( // Mostrar el botón solo en el login
+          <div className="mb-4 flex justify-end text-sm">
+            <button
+              type="button"
+              onClick={() => setIsForgotPasswordModalOpen(true)}
+              className="text-gray-500 hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col items-center justify-center">
           <Button
             btnText={type === "login" ? "Iniciar sesión" : "Registrarse"}
@@ -165,15 +187,22 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         </div>
       </form>
 
-      {feedback && <p className="mt-4 text-center text-sm text-red-500">{feedback}</p>}
+      <Modal
+        isOpen={isForgotPasswordModalOpen}
+        title="Recuperar contraseña"
+        onClose={() => setIsForgotPasswordModalOpen(false)}
+      >
+        <ForgotPasswordForm onSuccess={handleForgotPasswordSuccess} />
+      </Modal>
 
+      {feedback && <p className="mt-4 text-center text-sm text-red-500">{feedback}</p>}
       <SocialAuth />
 
       <p className="mt-4 text-sm">
         {type === "login" ? "¿No tienes una cuenta?" : "¿Ya tienes una cuenta?"}
         <Link
           href={type === "login" ? "/auth/register" : "/auth/login"}
-          className="text-red- ml-1 hover:underline"
+          className="ml-1 text-blue-500 hover:underline" // Corregí el color aquí
         >
           {type === "login" ? "Regístrate" : "Inicia sesión"}
         </Link>

@@ -9,9 +9,9 @@ import { useClickOutside } from "../hooks/use-click-outside";
 import { cn } from "./utils/cn";
 import Sidebar from "./layout/Sidebar";
 import Header from "./layout/Header";
-
-
-
+import SearchResultsComponent from "@/components/SearchResults";
+import api from "../hooks/useApi";
+import { NotificationProvider } from "../context/NotificationContext";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -23,6 +23,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const sidebarRef = useRef<HTMLElement>(null!);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
+
+  // Estados para búsqueda
+  const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -61,6 +67,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   });
 
+  // Efecto para búsqueda con debounce
+  useEffect(() => {
+    if (searchText.trim() === "") {
+      setSearchResults(null);
+      setIsSearching(false);
+      return;
+    }
+
+    const handler = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const response = await api.get(`/api/v1/search?query=${searchText}`);
+        setSearchResults(response.data);
+      } catch (error) {
+        console.error("Error en búsqueda:", error);
+        setSearchResults(null);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [searchText]);
+
   if (!mounted || checkingAuth) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-accent_oscuro">
@@ -70,10 +100,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (!tokenValid) {
-    return null; // La redirección ya se hizo arriba
+    return null; // Ya redirigió arriba
   }
 
   return (
+     <NotificationProvider>
     <div className="page min-h-screen bg-slate-100 transition-colors dark:bg-accent_oscuro">
       <div
         className={cn(
@@ -91,7 +122,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Header
           collapsed={collapsed}
           setCollapsed={setCollapsed}
+          searchText={searchText}
+          setSearchText={setSearchText}
+          setIsFocused={setIsFocused}
         />
+
+        {/* Mostrar resultados de búsqueda fuera del Header */}
+        {isFocused && searchText.trim() !== "" && (
+          <div className="absolute left-0 right-0 top-[60px] z-50 mx-auto max-w-md rounded-md border bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+            {isSearching ? (
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400">Buscando...</p>
+            ) : (
+              <SearchResultsComponent
+                results={searchResults}
+                setIsFocused={setIsFocused}
+                onSelectResult={(item, type) => {
+                  console.log("Seleccionado:", item, type);
+                  if (type === "producto") {
+                    router.push(`/dashboard/productos`);
+                  } else if (type === "proveedores") {
+                    router.push(`/dashboard/proveedores`);
+                  } else if (type === "usuario") {
+                    router.push(`/dashboard/usuario`);
+                  }
+
+                  setIsFocused(false);
+                }}
+              />
+            )}
+          </div>
+        )}
+
         <div className="h-[calc(100vh-60px)] overflow-y-auto overflow-x-hidden p-6">{children}</div>
       </div>
 
@@ -100,5 +161,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         autoClose={5000}
       />
     </div>
+    </NotificationProvider>
   );
 }

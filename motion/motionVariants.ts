@@ -5,7 +5,6 @@ export const fadeInOnScroll = (delay: number, duration: number) => ({
     transition: {
       delay: delay, //Pequeño retraso antes de comenzar la animación.
       duration: duration, //Duración de la animación.
-      ease: [0.22, 0, 0.58, 1], //Bezier cúbico personalizado para un efecto de entrada y salida suave
     },
   },
 });

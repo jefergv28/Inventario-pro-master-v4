@@ -22,21 +22,7 @@ const SettingsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false); // Nuevo estado para la visibilidad de la contraseña
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const target = e.target;
-    const { name, value } = target;
-    const checked = "checked" in target ? (target as HTMLInputElement).checked : undefined;
 
-    setUsuario((prev) =>
-      prev
-        ? {
-            ...prev,
-            [name]: checked !== undefined ? checked : value,
-          }
-        : null,
-    );
-    setHasChanges(true);
-  };
 
   const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -197,20 +183,7 @@ const SettingsPage = () => {
             <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-700 dark:text-white">
               <FaGlobe /> Preferencias
             </h2>
-            <label className="flex items-center gap-2 text-black dark:text-white">
-              <span>Idioma:</span>
-              <motion.select
-                name="language"
-                value={usuario?.language}
-                onChange={handleChange}
-                whileFocus={{ scale: 1.05 }}
-                className="rounded border p-2"
-              >
-                <option value="es">Español</option>
-                <option value="en">Inglés</option>
-                <option value="fr">Francés</option>  <option value="de">Alemán</option>
-              </motion.select>
-            </label>
+
             <label className="flex items-center justify-between">
               <span className="flex items-center gap-2 text-black dark:text-white">
                 <FaBell /> Recibir notificaciones

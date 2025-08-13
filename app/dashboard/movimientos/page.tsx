@@ -8,32 +8,31 @@ import Cookies from "js-cookie";
 
 interface Movimiento {
   id: number;
-  fecha: string; // en formato "YYYY-MM-DD"
-  usuario: string;
-  producto: string;
-  tipo: string; // "ENTRADA" | "SALIDA"
+  fecha: string;
+  nombreUsuario: string; // <-- Corregido
+  nombreProducto: string; // <-- Corregido
+  tipo: string;
   cantidad: number;
 }
 
 interface MovimientoBackend {
   id: number;
-  fechaMovimiento: string; // fecha ISO del backend
-  usuario: {
-    username: string;
-  };
-  producto: {
-    nombreProducto: string;
-  };
-  tipoMovimiento: string; // "ENTRADA" o "SALIDA"
+  fecha: string;
+  nombreUsuario: string; // <-- Corregido
+  nombreProducto: string; // <-- Corregido
+  tipoMovimiento: string;
   cantidad: number;
 }
 
 const MovementHistoryPage = () => {
   const [movements, setMovements] = useState<Movimiento[]>([]);
-  const [filters, setFilters] = useState({ fecha: "", usuario: "", producto: "", tipo: "" });
 
-  const token = Cookies.get("token"); // Devuelve undefined si no existe
+  // CORRECCIÓN: El estado del filtro debe usar los nombres de las propiedades correctas
+  const [filters, setFilters] = useState({ fecha: "", nombreUsuario: "", nombreProducto: "", tipo: "" });
 
+  const token = Cookies.get("token");
+
+  // CORRECCIÓN: El useEffect ahora tiene la estructura correcta.
   useEffect(() => {
     const fetchMovements = async () => {
       try {
@@ -41,29 +40,31 @@ const MovementHistoryPage = () => {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
 
-        const movimientosBackend: Movimiento[] = res.data.map((m) => ({
+        const movimientosMapeados: Movimiento[] = res.data.map((m) => ({
           id: m.id,
-          fecha: m.fechaMovimiento ? new Date(m.fechaMovimiento).toISOString().slice(0, 10) : "",
-          usuario: m.usuario?.username || "Desconocido",
-          producto: m.producto?.nombreProducto || "Desconocido",
+          fecha: m.fecha ? new Date(m.fecha).toISOString().slice(0, 10) : "",
+          nombreUsuario: m.nombreUsuario || "Desconocido",
+          nombreProducto: m.nombreProducto || "Desconocido",
           tipo: m.tipoMovimiento || "ENTRADA",
           cantidad: m.cantidad || 0,
         }));
 
-        setMovements(movimientosBackend);
+        setMovements(movimientosMapeados);
       } catch (error) {
         console.error("Error cargando movimientos", error);
       }
     };
 
-    fetchMovements();
-  }, [token]);
+    fetchMovements(); // <-- Ahora sí se llama la función dentro del useEffect
+  }, [token]); // <-- El useEffect se cierra correctamente aquí.
 
+  // Ahora, el filtrado es una variable local en el renderizado del componente.
   const filteredMovements = movements.filter(
     (m) =>
       (!filters.fecha || m.fecha === filters.fecha) &&
-      (!filters.usuario || m.usuario.toLowerCase().includes(filters.usuario.toLowerCase())) &&
-      (!filters.producto || m.producto.toLowerCase().includes(filters.producto.toLowerCase())) &&
+      // CORRECCIÓN: Usar los nombres de propiedades correctos del DTO
+      (!filters.nombreUsuario || m.nombreUsuario.toLowerCase().includes(filters.nombreUsuario.toLowerCase())) &&
+      (!filters.nombreProducto || m.nombreProducto.toLowerCase().includes(filters.nombreProducto.toLowerCase())) &&
       (!filters.tipo || m.tipo.toUpperCase() === filters.tipo.toUpperCase()),
   );
 
@@ -83,13 +84,15 @@ const MovementHistoryPage = () => {
           type="text"
           placeholder="Usuario"
           className="input"
-          onChange={(e) => setFilters({ ...filters, usuario: e.target.value })}
+          // CORRECCIÓN: Actualizar el estado del filtro con el nombre de la propiedad correcta
+          onChange={(e) => setFilters({ ...filters, nombreUsuario: e.target.value })}
         />
         <input
           type="text"
           placeholder="Producto"
           className="input"
-          onChange={(e) => setFilters({ ...filters, producto: e.target.value })}
+          // CORRECCIÓN: Actualizar el estado del filtro con el nombre de la propiedad correcta
+          onChange={(e) => setFilters({ ...filters, nombreProducto: e.target.value })}
         />
         <select
           className="input"
@@ -116,15 +119,16 @@ const MovementHistoryPage = () => {
           <tbody className="table-body">
             {filteredMovements.map((movement, index) => (
               <motion.tr
-                key={movement.id}
+                key={movement.id || index}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 className="border-b"
               >
                 <td className="table-cell">{movement.fecha}</td>
-                <td className="table-cell">{movement.usuario}</td>
-                <td className="table-cell">{movement.producto}</td>
+                {/* CORRECCIÓN: Usar los nombres de propiedades correctos del DTO */}
+                <td className="table-cell">{movement.nombreUsuario}</td>
+                <td className="table-cell">{movement.nombreProducto}</td>
                 <td className={`table-cell font-bold ${movement.tipo.toUpperCase() === "ENTRADA" ? "text-green-500" : "text-red-500"}`}>
                   {movement.tipo}
                 </td>

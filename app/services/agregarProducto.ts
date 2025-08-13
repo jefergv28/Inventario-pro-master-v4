@@ -1,5 +1,4 @@
 import api from "../hooks/useApi";
-import { AxiosError } from "axios";
 
 export interface Producto {
   id?: number;
@@ -35,15 +34,8 @@ const agregarProducto = async (producto: Producto, token: string) => {
 
     return response.data;
   } catch (err) {
-    let errorMessage = "Error al agregar producto";
 
-    if (err instanceof AxiosError) {
-      errorMessage = err.response?.data?.message || err.message || `Error ${err.response?.status}`;
-    } else if (err instanceof Error) {
-      errorMessage = err.message;
-    }
-
-    throw new Error(errorMessage);
+    throw err;
   }
 };
 

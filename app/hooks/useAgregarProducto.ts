@@ -30,36 +30,39 @@ const useAgregarProducto = () => {
         throw new Error("No se encontró el token de autenticación.");
       }
 
-      const response = await agregarProducto(producto, token);
+       await agregarProducto(producto, token);
       setSuccess("Producto agregado correctamente!");
-      return response;
+      return true;
 
-    } catch (err: unknown) {
-      console.error("Error al agregar producto:", err);
+   } catch (err: unknown) {
+    console.error("Error al agregar producto:", err);
 
-      if (isBackendError(err)) {
+    if (isBackendError(err)) {
         const status = err.response.status;
         const backendMessage = err.response.data?.message || "";
 
         if (status === 400) {
-          if (backendMessage.includes("tipo de archivo no permitido")) {
-            setError("Solo se permiten imágenes PNG, JPG o JPEG.");
-          } else {
-            setError(backendMessage || "Error de validación del producto.");
-          }
+            if (backendMessage.includes("tipo de archivo no permitido")) {
+                setError("Solo se permiten imágenes PNG, JPG o JPEG.");
+            } else {
+                setError(backendMessage || "Error de validación del producto.");
+            }
+        } else if (status === 403) {
+            setError("No tienes permiso para realizar esta acción.");
         } else if (status === 404) {
-          setError("No se encontró el recurso solicitado.");
+            setError("No se encontró el recurso solicitado.");
         } else {
-          setError("Error inesperado al agregar el producto.");
+            setError("Error inesperado al agregar el producto.");
         }
-      } else if (err instanceof Error) {
+    } else if (err instanceof Error) {
         setError(err.message);
-      } else {
+    } else {
         setError("Hubo un error al agregar el producto.");
-      }
-    } finally {
-      setLoading(false);
     }
+    return false
+} finally {
+    setLoading(false);
+}
   };
 
   return {

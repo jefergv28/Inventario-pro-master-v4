@@ -6,6 +6,7 @@ import api from "@/app/hooks/useApi";
 import Footer from "../layout/Footer";
 import axios from "axios";
 import Modal from "@/components/modal/Modal";
+import { useNotification } from "@/app/context/NotificationContext";
 
 interface Proveedor {
   id: number;
@@ -19,11 +20,9 @@ export default function ProveedoresPage() {
   const [form, setForm] = useState({ nombre: "", contacto: "", direccion: "" });
   const [token] = useState(""); // Asegúrate de obtener el token JWT
   const [modalAbierto, setModalAbierto] = useState(false);
-const [mensajeModal, setMensajeModal] = useState("");
+  const [mensajeModal, setMensajeModal] = useState("");
+  const { addNotification } = useNotification();
 
-
-
-  // Obtener proveedores al cargar
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -33,10 +32,11 @@ const [mensajeModal, setMensajeModal] = useState("");
         setProveedores(response.data);
       } catch (error) {
         console.error("Error cargando proveedores", error);
+        addNotification("Error cargando proveedores", "error");
       }
     };
     fetchData();
-  }, [token]);
+  }, [token, addNotification]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,29 +49,32 @@ const [mensajeModal, setMensajeModal] = useState("");
       });
       setProveedores((prev) => [...prev, response.data]);
       setForm({ nombre: "", contacto: "", direccion: "" });
+      addNotification("Proveedor agregado correctamente", "success");
     } catch (error) {
       console.error("Error al agregar proveedor", error);
+      addNotification("Error al agregar proveedor", "error");
     }
   };
 
   const eliminarProveedor = async (id: number) => {
     try {
       await api.delete(`/proveedores/${id}`, {
-        withCredentials: true, // ✅ necesario si usas cookies
+        withCredentials: true, // necesario si usas cookies
       });
-
       setProveedores((prev) => prev.filter((p) => p.id !== id));
+      addNotification("Proveedor eliminado correctamente", "success");
     } catch (error: unknown) {
-  if (axios.isAxiosError(error)) {
-    const mensaje = error.response?.data || "Error desconocido al eliminar proveedor";
-    setMensajeModal(mensaje);
-    setModalAbierto(true);
-  } else {
-    setMensajeModal("Error inesperado");
-    setModalAbierto(true);
-  }
-}
-
+      if (axios.isAxiosError(error)) {
+        const mensaje = error.response?.data || "Error desconocido al eliminar proveedor";
+        setMensajeModal(mensaje);
+        setModalAbierto(true);
+        addNotification(mensaje, "error");
+      } else {
+        setMensajeModal("Error inesperado");
+        setModalAbierto(true);
+        addNotification("Error inesperado", "error");
+      }
+    }
   };
 
   return (
@@ -154,12 +157,13 @@ const [mensajeModal, setMensajeModal] = useState("");
           ))}
         </tbody>
       </table>
-<Modal
-  isOpen={modalAbierto}
-  message={mensajeModal}
-  onClose={() => setModalAbierto(false)}
-  onlyMessage
-/>
+
+      <Modal
+        isOpen={modalAbierto}
+        message={mensajeModal}
+        onClose={() => setModalAbierto(false)}
+        onlyMessage
+      />
 
       <Footer />
     </div>

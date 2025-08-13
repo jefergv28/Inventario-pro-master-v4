@@ -3,6 +3,8 @@ interface ButtonTertiaryProps {
   onClick?: () => void; // Agregar onClick como prop opcional
   children?: React.ReactNode;
   variant?: "default" | "outline" | "secondary";
+   disabled?: boolean;
+   className?: string;
 }
 
 const ButtonTertiary: React.FC<ButtonTertiaryProps> = ({

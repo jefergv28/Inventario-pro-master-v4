@@ -1,17 +1,4 @@
-import {
-  Home,
-  Package,
-  PackagePlus,
-  ShoppingBag,
-  Users,
-  UserPlus,
-  UserCheck,
-  Settings,
-  NotepadText,
-  ChartColumn,
-  AlertTriangle,
-  List,
-} from "lucide-react"; // Asegúrate de importar todos los íconos necesarios
+import { Home, Package, PackagePlus, ShoppingBag, Users, UserCheck, Settings, NotepadText, ChartColumn, AlertTriangle, List } from "lucide-react"; // Asegúrate de importar todos los íconos necesarios
 
 export const navbarLinks = [
   {
@@ -41,11 +28,6 @@ export const navbarLinks = [
         label: "Usuario",
         icon: Users,
         path: "/dashboard/usuario",
-      },
-      {
-        label: "Nuevo Usuario",
-        icon: UserPlus,
-        path: "/dashboard/newuser",
       },
       {
         label: "Usuarios Verificados",

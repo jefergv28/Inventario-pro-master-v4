@@ -153,8 +153,9 @@ const NewProductPage = () => {
         image: product.image,
       };
 
-      await agregarProducto(producto);
+     const success = await agregarProducto(producto);
 
+     if (success){
       setSuccessMessage("¡Producto agregado correctamente!");
       setTimeout(() => {
         router.push("/dashboard/productos");
@@ -168,9 +169,10 @@ const NewProductPage = () => {
         provider: 0,
         price: 0,
         image: null,
-      });
-    } catch (err) {
-      console.error("Error al agregar producto:", err);
+      })
+    }
+    } catch {
+
     }
   };
 
