@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Filter, Loader2, Eye } from "lucide-react";
 import Footer from "../layout/Footer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Modal from "@/components/modal/Modal";
-import api from "@/lib/api";
+import { createApi } from "@/lib/api";
 
 type User = {
   id: string;
@@ -27,24 +27,38 @@ const VerifiedUsersPage = () => {
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [permissionsToView, setPermissionsToView] = useState<Permissions | null>(null);
 
-  const fetchApprovedUsers = async () => {
+  const showModal = (msg: React.ReactNode) => {
+    alert(msg); // o un toast/modal personalizado
+  };
+
+  const api = createApi(showModal); // ✅ ahora sí se usa
+
+  const fetchApprovedUsers = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await api.get("/api/usuarios/empleados");
       const approvedUsers = response.data.filter((user: User) => user.status === "APPROVED");
       setUsers(approvedUsers);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error al cargar usuarios aprobados:", error);
-      toast.error("No se pudieron cargar los usuarios.");
+
+      let message = "No se pudieron cargar los usuarios.";
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const e = error as { response?: { data?: { message?: string } } };
+        message = e.response?.data?.message || message;
+      }
+      toast.error(message);
+
       setUsers([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [api]);
+
 
   useEffect(() => {
     fetchApprovedUsers();
-  }, []);
+  }, [fetchApprovedUsers]);
 
   const handleViewPermissions = (permissionsJson: string) => {
     try {

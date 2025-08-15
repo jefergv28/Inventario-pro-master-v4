@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Footer from "../layout/Footer";
-import api from "@/lib/api"; // 👈 Cliente centralizado
+import { createApi } from "@/lib/api"; // 👈 Cliente centralizado
 
 interface Movimiento {
   id: number;
@@ -32,6 +32,12 @@ const MovementHistoryPage = () => {
     tipo: "",
   });
 
+  const showModal = (msg: React.ReactNode) => {
+    alert(msg); // 👈 aquí podrías usar un toast o modal más avanzado
+  };
+
+  const api = createApi(showModal);
+
   useEffect(() => {
     const fetchMovements = async () => {
       try {
@@ -54,7 +60,7 @@ const MovementHistoryPage = () => {
     };
 
     fetchMovements();
-  }, []);
+  }, [api]);
 
   const filteredMovements = movements.filter(
     (m) =>

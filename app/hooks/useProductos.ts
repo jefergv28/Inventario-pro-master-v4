@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
 import { mapBackendProductoToProducto, Producto } from "../dashboard/utils/transform";
-import api from "@/lib/api";
-
+import { createApi } from "@/lib/api";
 
 const useProductos = () => {
   const [productos, setProductos] = useState<Producto[]>([]);

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import api from "@/lib/api"; // 👈 Usamos el cliente centralizado
+import { useModal } from "../../context/ModalContext"; // Ruta de importación corregida
+import { createApi } from "@/lib/api";
 import Footer from "../layout/Footer";
 import { TrendStock } from "./componest/Trends";
 import { motion } from "framer-motion";
@@ -23,6 +24,9 @@ const AnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { showModal } = useModal();
+  const api = createApi(showModal);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -38,7 +42,7 @@ const AnalyticsPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [api]);
 
   if (loading) return <div className="p-6 text-center">Cargando datos de analítica...</div>;
   if (error) return <div className="p-6 text-center text-red-500">Error: {error}</div>;
@@ -50,17 +54,19 @@ const AnalyticsPage = () => {
       animate="visible"
       variants={{ visible: { transition: { staggerChildren: 0.2 } } }}
     >
-      <h1 className="title">Analítica de Inventario</h1>
+            <h1 className="title">Analítica de Inventario</h1>     {" "}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+               {" "}
         <motion.div
           className="card col-span-1 rounded-2xl p-4 shadow-md md:col-span-2"
           variants={cardVariants}
         >
-          <h2 className="cart-title text-black dark:text-white">Productos más movidos</h2>
-          <TrendStock data={mostMovedProducts} />
+                    <h2 className="cart-title text-black dark:text-white">Productos más movidos</h2>
+                    <TrendStock data={mostMovedProducts} />       {" "}
         </motion.div>
+             {" "}
       </div>
-      <Footer />
+            <Footer />   {" "}
     </motion.div>
   );
 };

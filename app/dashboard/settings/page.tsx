@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import Modal from "@/components/modal/Modal";
 import { toast } from "sonner";
 import { useNetAuth } from "@/app/hooks/useNetAuth"; // Importamos el hook
-import api from "@/lib/api";
+import { createApi } from "@/lib/api";
 
 const SettingsPage = () => {
   // Usamos el estado global del hook, incluyendo isLoading
@@ -21,6 +21,12 @@ const SettingsPage = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false); // Nuevo estado para la visibilidad de la contraseña
+
+  const showModal = (msg: React.ReactNode) => {
+    alert(msg); // o un toast/modal personalizado
+  };
+
+  const api = createApi(showModal); // ✅ ahora sí se usa
 
   const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

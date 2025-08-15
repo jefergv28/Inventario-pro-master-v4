@@ -3,159 +3,158 @@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, UserPlus, Loader2 } from "lucide-react";
 import Footer from "../layout/Footer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import Modal from "@/components/modal/Modal";
 import { toast } from "sonner";
 import NewUserForm from "@/components/NewUserForm";
-import api from "@/lib/api";
+import { createApi } from "@/lib/api";
 
-
-// Define la interfaz del usuario que llega desde el backend
-type User = {
+// Interfaz del usuario que viene del backend
+interface User {
   id: string;
   name: string;
   email: string;
   role: string;
-  // Asumimos que el backend envía un OBJETO de permisos, no un string
-  permissions: {
-    add?: boolean;
-    editUser?: boolean;
-    deleteUser?: boolean;
-    createUser?: boolean;
-    viewProduct?: boolean;
-    addProduct?: boolean;
-    editProduct?: boolean;
-    deleteProduct?: boolean;
-    viewCategory?: boolean;
-    addCategory?: boolean;
-    editCategory?: boolean;
-    deleteCategory?: boolean;
-    viewProvider?: boolean;
-    addProvider?: boolean;
-    editProvider?: boolean;
-    deleteProvider?: boolean;
-  };
-};
+  permissions: Record<string, boolean>;
+}
 
-// Interfaz para el usuario que se pasa al NewUserForm para edición
-// Contiene el 'permissions' del backend convertido a 'permissionsJson'
+// Interfaz para edición en formulario
 interface UserToEditForForm extends User {
   permissionsJson: string;
 }
 
 const UsersPage = () => {
   const [filter, setFilter] = useState("Todos");
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [userToDeleteId, setUserToDeleteId] = useState<string | null>(null);
   const [userToEdit, setUserToEdit] = useState<UserToEditForForm | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUsers = async () => {
+  // Inicializa el cliente API con showModal
+  const showModal = (msg: React.ReactNode = "Ocurrió un error") => {
+    toast.error(msg?.toString());
+  };
+
+  const api = createApi(showModal);
+
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/usuarios/empleados");
+      const response = await api.get<User[]>("/api/usuarios/empleados");
       setUsers(response.data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error al cargar usuarios:", error);
-      toast.error("No se pudieron cargar los usuarios.");
+
+      let message = "No se pudieron cargar los usuarios.";
+
+      // Validamos si error es un objeto con la propiedad response
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const e = error as { response?: { data?: { message?: string } } };
+        message = e.response?.data?.message || message;
+      }
+
+      toast.error(message);
       setUsers([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [api]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
+  // Crear usuario
   const handleCreateUser = () => {
     setUserToEdit(null);
     setIsFormModalOpen(true);
   };
 
-  // Lógica para preparar los datos del usuario antes de pasarlos al formulario
+  // Editar usuario
   const handleEditClick = (user: User) => {
-    const userForForm: UserToEditForForm = {
+    setUserToEdit({
       ...user,
-      // Convertimos el objeto 'permissions' a un string JSON para el formulario
       permissionsJson: JSON.stringify(user.permissions || {}),
-    };
-    setUserToEdit(userForForm);
+    });
     setIsFormModalOpen(true);
   };
 
+  // Iniciar eliminación
   const handleInitiateDelete = (userId: string) => {
     setUserToDeleteId(userId);
     setIsConfirmModalOpen(true);
   };
 
+  // Confirmar eliminación
   const handleDeleteConfirmed = async () => {
-    if (userToDeleteId) {
-      try {
-        await api.delete(`/api/usuarios/${userToDeleteId}`);
-        toast.success("Usuario eliminado correctamente.");
-        fetchUsers();
-      } catch (error) {
-        console.error("Error al eliminar usuario:", error);
-        toast.error("No se pudo eliminar el usuario. Revisa tus permisos.");
-      } finally {
-        setIsConfirmModalOpen(false);
-        setUserToDeleteId(null);
-      }
+    if (!userToDeleteId) return;
+    try {
+      await api.delete(`/api/usuarios/${userToDeleteId}`);
+      toast.success("Usuario eliminado correctamente.");
+      setUsers(users.filter((u) => u.id !== userToDeleteId));
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error);
+      toast.error("No se pudo eliminar el usuario. Revisa tus permisos.");
+    } finally {
+      setIsConfirmModalOpen(false);
+      setUserToDeleteId(null);
     }
   };
 
+  // Cerrar modal de formulario
   const handleCloseFormModal = () => {
     setIsFormModalOpen(false);
     setUserToEdit(null);
-    fetchUsers();
   };
 
+  // Cerrar modal de confirmación
   const handleCloseConfirmModal = () => {
     setIsConfirmModalOpen(false);
     setUserToDeleteId(null);
   };
 
-  const filteredUsers = filter === "Todos" ? users : users.filter((user) => user.role === filter);
+  // Filtrar usuarios
+  const filteredUsers = filter === "Todos" ? users : users.filter((u) => u.role === filter);
 
   return (
     <div className="mt-0 space-y-6 p-6">
+      {/* Header */}
       <div className="card-header flex items-center justify-between">
         <p className="title">Usuarios</p>
         <Button onClick={handleCreateUser}>
-          <UserPlus className="mr-2 h-5 w-5" />
-          Crear Usuario
+          <UserPlus className="mr-2 h-5 w-5" /> Crear Usuario
         </Button>
       </div>
 
+      {/* Filtro */}
       <div className="flex items-center gap-4">
         <select
           className="rounded border p-2 text-black dark:text-white"
-          onChange={(e) => setFilter(e.target.value)}
           value={filter}
+          onChange={(e) => setFilter(e.target.value)}
         >
           <option value="Todos">Todos</option>
           <option value="ADMIN">Administradores</option>
           <option value="EMPLOYEE">Empleados</option>
         </select>
-        <Button variant="outline">Filtrar</Button>
       </div>
 
+      {/* Tabla o Loader */}
       {isLoading ? (
         <div className="flex items-center justify-center p-8">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
         </div>
-      ) : users.length === 0 ? (
+      ) : filteredUsers.length === 0 ? (
         <div className="p-8 text-center text-gray-500 dark:text-gray-400">
           <p>No hay usuarios registrados.</p>
         </div>
       ) : (
         <div className="card">
           <div className="card-body p-0">
-            <div className="relative h-[500px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
+            <div className="relative h-[500px] w-full overflow-auto">
               <table className="table">
                 <thead className="table-header">
                   <tr className="table-row">
@@ -172,7 +171,7 @@ const UsersPage = () => {
                       className="table-row"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
+                      transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
                     >
                       <td className="table-cell">{user.name}</td>
                       <td className="table-cell">{user.email}</td>
@@ -183,15 +182,13 @@ const UsersPage = () => {
                             variant="outline"
                             onClick={() => handleEditClick(user)}
                           >
-                            <Edit className="mr-2 h-5 w-5" />
-                            Editar
+                            <Edit className="mr-2 h-5 w-5" /> Editar
                           </Button>
                           <Button
                             variant="destructive"
                             onClick={() => handleInitiateDelete(user.id)}
                           >
-                            <Trash2 className="mr-2 h-5 w-5" />
-                            Eliminar
+                            <Trash2 className="mr-2 h-5 w-5" /> Eliminar
                           </Button>
                         </div>
                       </td>
@@ -206,6 +203,7 @@ const UsersPage = () => {
 
       <Footer />
 
+      {/* Modal de formulario */}
       <Modal
         isOpen={isFormModalOpen}
         title={userToEdit ? "Editar Usuario" : "Registrar Nuevo Usuario"}
@@ -221,6 +219,7 @@ const UsersPage = () => {
         />
       </Modal>
 
+      {/* Modal de confirmación */}
       <Modal
         isOpen={isConfirmModalOpen}
         title="Confirmar Eliminación"

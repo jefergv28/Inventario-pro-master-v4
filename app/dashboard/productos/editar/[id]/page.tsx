@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useNotification } from "@/app/context/NotificationContext";
-import api from "@/lib/api";
+import { createApi } from "@/lib/api";
 
 interface Categoria {
   id: number;
@@ -53,6 +53,12 @@ const EditProductPage = () => {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
 
+  const showModal = (msg: React.ReactNode) => {
+    alert(msg); // o usar tu modal/Toast personalizado
+  };
+
+  const api = createApi(showModal); // ✅ ahora sí se usa
+
   // Obtener producto
   useEffect(() => {
     if (!productIdString) return;
@@ -73,7 +79,7 @@ const EditProductPage = () => {
       }
     };
     fetchProducto();
-  }, [productIdString]);
+  }, [api, productIdString]);
 
   // Obtener categorías
   useEffect(() => {
@@ -86,7 +92,7 @@ const EditProductPage = () => {
       }
     };
     fetchCategorias();
-  }, []);
+  }, [api]);
 
   // Obtener proveedores
   useEffect(() => {
@@ -99,7 +105,7 @@ const EditProductPage = () => {
       }
     };
     fetchProveedores();
-  }, []);
+  }, [api]);
 
   const validate = () => {
     const newErrors = {

@@ -6,7 +6,7 @@ import Footer from "../layout/Footer";
 import axios from "axios";
 import Modal from "@/components/modal/Modal";
 import { useNotification } from "@/app/context/NotificationContext";
-import api from "@/lib/api";
+import { createApi } from "@/lib/api";
 
 interface Proveedor {
   id: number;
@@ -23,6 +23,12 @@ export default function ProveedoresPage() {
   const [mensajeModal, setMensajeModal] = useState("");
   const { addNotification } = useNotification();
 
+  const showModal = (msg: React.ReactNode) => {
+    alert(msg); // o un toast/modal personalizado
+  };
+
+  const api = createApi(showModal); // ✅ ahora sí se usa
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -36,7 +42,7 @@ export default function ProveedoresPage() {
       }
     };
     fetchData();
-  }, [token, addNotification]);
+  }, [token, addNotification, api]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });

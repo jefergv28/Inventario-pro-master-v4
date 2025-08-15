@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Cookies from "js-cookie";
 import Footer from "../layout/Footer";
-import api from "@/lib/api";
+import { createApi } from "@/lib/api";
 
 interface Producto {
   id: number;
@@ -46,6 +46,12 @@ export default function StockPage() {
     setToken(t || null);
   }, []);
 
+  const showModal = (msg: React.ReactNode) => {
+    alert(msg); // o un toast/modal personalizado
+  };
+
+  const api = createApi(showModal); // ✅ ahora sí se usa
+
   useEffect(() => {
     if (!token) return;
 
@@ -64,7 +70,7 @@ export default function StockPage() {
     };
 
     fetchAll();
-  }, [token]);
+  }, [api, token]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });

@@ -11,6 +11,9 @@ import SocialAuth from "./SocialAuth";
 import Cookie from "js-cookie";
 import Modal from "../modal/Modal";
 import ForgotPasswordForm from "../ForgotPasswordForm";
+
+// Corregimos la ruta de importación para que sea relativa a la carpeta `app/context`
+import { useModal } from "../../app/context/ModalContext";
 import { createApi } from "@/lib/api";
 
 type AuthFormProps = {
@@ -19,25 +22,42 @@ type AuthFormProps = {
 
 const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>(""); // Declaramos el hook del modal para usar la función showModal
 
-  const [errors, setErrors] = useState<{ fullName?: string; email?: string; password?: string }>({});
-  const [feedback, setFeedback] = useState("");
-  const [modalMessage, setModalMessage] = useState<string | null>(null);
+  const { showModal } = useModal();
+  const api = createApi(showModal); // Creamos la instancia de api con el modal
+
+  const [errors, setErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    password?: string;
+  }>({});
+  const [feedback, setFeedback] = useState<string>("");
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
 
-  const router = useRouter();
+  const router = useRouter(); // Función para cerrar el modal después de un envío exitoso
 
-  const handleForgotPasswordSuccess = () => setIsForgotPasswordModalOpen(false);
+  const handleForgotPasswordSuccess = () => {
+    setIsForgotPasswordModalOpen(false);
+  };
 
-  // Validaciones
-  const validateFullName = (value: string) => (value.trim().length < 3 ? "El nombre debe tener al menos 3 caracteres." : "");
-  const validateEmail = (value: string) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? "" : "Ingresa un correo válido.");
-  const validatePassword = (value: string) => (value.length < 6 ? "La contraseña debe tener al menos 6 caracteres." : "");
+  const validateFullName = (value: string): string => {
+    if (value.trim().length < 3) return "El nombre debe tener al menos 3 caracteres.";
+    return "";
+  };
+  const validateEmail = (value: string): string => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) return "Ingresa un correo válido.";
+    return "";
+  };
+  const validatePassword = (value: string): string => {
+    if (value.length < 6) return "La contraseña debe tener al menos 6 caracteres.";
+    return "";
+  };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: string): void => {
     const { value } = e.target;
     const newErrors = { ...errors };
 
@@ -65,14 +85,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
     };
     setErrors(newErrors);
 
-    if (Object.values(newErrors).some((err) => err)) {
+    if (Object.values(newErrors).some((error) => error)) {
       setFeedback("Por favor corrige los errores antes de enviar el formulario.");
       return;
     }
-
-    const api = createApi((msg: React.ReactNode) => {
-      setModalMessage(typeof msg === "string" ? msg : JSON.stringify(msg));
-    });
 
     try {
       if (type === "register") {
@@ -87,7 +103,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         router.push("/dashboard");
       }
     } catch (err) {
-      // Ya el createApi muestra modal, aquí podemos log opcional
+      // La lógica del modal en el interceptor de la API ya maneja la visualización del error
+      // Por lo tanto, aquí no es necesario mostrar el feedback,
+      // pero puedes dejar el `console.error` para depuración.
       console.error(err);
     }
   };
@@ -99,18 +117,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
       whileInView="visible"
       className="flex w-full max-w-md flex-col items-center justify-center rounded-lg bg-accent/60 p-8 shadow-lg"
     >
-      <h2 className="mt-4 text-2xl font-bold">{type === "login" ? "Inicia sesión en tu cuenta" : "¡Únete a Inventario-Pro!"}</h2>
+        <h2 className="mt-4 text-2xl font-bold">{type === "login" ? "Inicia sesión en tu cuenta" : "¡Únete a Inventario-Pro!"}</h2> {" "}
       <p className="text-gray-00 pointer-events-none mb-6 text-sm">
-        {type === "login" ? "Ingresa tus credenciales para continuar." : "Crea tu cuenta y comienza a gestionar tu inventario."}
+          {type === "login" ? "Ingresa tus credenciales para continuar." : "Crea tu cuenta y comienza a gestionar tu inventario."} {" "}
       </p>
-
+       {" "}
       <form
         className="w-full"
         onSubmit={handleSubmit}
       >
+         {" "}
         {type === "register" && (
           <div className="mb-4">
-            <label className="block text-sm font-medium">Nombre completo</label>
+               <label className="block text-sm font-medium">Nombre completo</label>
+              {" "}
             <input
               type="text"
               value={fullName}
@@ -118,12 +138,13 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
               className="w-full rounded-lg border px-4 py-2 text-white focus:outline-none"
               placeholder="Tu nombre completo"
             />
-            {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
+               {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}  {" "}
           </div>
         )}
-
+         {" "}
         <div className="mb-4">
-          <label className="block text-sm font-medium">Correo electrónico</label>
+             <label className="block text-sm font-medium">Correo electrónico</label>
+            {" "}
           <input
             type="email"
             value={email}
@@ -131,11 +152,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
             className="w-full rounded-lg border px-4 py-2 text-white focus:outline-none"
             placeholder="tucorreo@ejemplo.com"
           />
-          {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+             {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>} {" "}
         </div>
-
+         {" "}
         <div className="relative mb-4">
-          <label className="block text-sm font-medium">Contraseña</label>
+             <label className="block text-sm font-medium">Contraseña</label>
+            {" "}
           <input
             type={showPassword ? "text" : "password"}
             value={password}
@@ -143,66 +165,62 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
             className="w-full rounded-lg border px-4 py-2 text-white focus:outline-none"
             placeholder="••••••••"
           />
+            {" "}
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-9 text-gray-500"
           >
-            {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+               {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}  {" "}
           </button>
-          {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
+             {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>} {" "}
         </div>
-
-        {type === "login" && (
+         {" "}
+        {type === "login" && ( // Mostrar el botón solo en el login
           <div className="mb-4 flex justify-end text-sm">
+              {" "}
             <button
               type="button"
               onClick={() => setIsForgotPasswordModalOpen(true)}
               className="text-gray-500 hover:underline"
             >
-              ¿Olvidaste tu contraseña?
+                  ¿Olvidaste tu contraseña?   {" "}
             </button>
+             {" "}
           </div>
         )}
-
+         {" "}
         <div className="flex flex-col items-center justify-center">
+            {" "}
           <Button
             btnText={type === "login" ? "Iniciar sesión" : "Registrarse"}
             disabled={Object.values(errors).some((error) => error)}
           />
+           {" "}
         </div>
+         {" "}
       </form>
-
+       {" "}
       <Modal
         isOpen={isForgotPasswordModalOpen}
         title="Recuperar contraseña"
         onClose={() => setIsForgotPasswordModalOpen(false)}
       >
-        <ForgotPasswordForm onSuccess={handleForgotPasswordSuccess} />
+          <ForgotPasswordForm onSuccess={handleForgotPasswordSuccess} /> {" "}
       </Modal>
-
-      {/* Modal para errores de red o API */}
-      <Modal
-        isOpen={!!modalMessage}
-        title="Error"
-        onClose={() => setModalMessage(null)}
-        onlyMessage
-      >
-        {modalMessage}
-      </Modal>
-
-      {feedback && <p className="mt-4 text-center text-sm text-red-500">{feedback}</p>}
-      <SocialAuth />
-
+        {feedback && <p className="mt-4 text-center text-sm text-red-500">{feedback}</p>}
+        <SocialAuth /> {" "}
       <p className="mt-4 text-sm">
-        {type === "login" ? "¿No tienes una cuenta?" : "¿Ya tienes una cuenta?"}
+          {type === "login" ? "¿No tienes una cuenta?" : "¿Ya tienes una cuenta?"} {" "}
         <Link
           href={type === "login" ? "/auth/register" : "/auth/login"}
           className="ml-1 text-blue-500 hover:underline"
         >
-          {type === "login" ? "Regístrate" : "Inicia sesión"}
+             {type === "login" ? "Regístrate" : "Inicia sesión"} {" "}
         </Link>
+         {" "}
       </p>
+      {" "}
     </motion.div>
   );
 };

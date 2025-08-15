@@ -1,5 +1,4 @@
-import api from "@/lib/api";
-
+import { createApi } from "@/lib/api";
 
 export interface Producto {
   id?: number;
@@ -35,7 +34,6 @@ const agregarProducto = async (producto: Producto, token: string) => {
 
     return response.data;
   } catch (err) {
-
     throw err;
   }
 };

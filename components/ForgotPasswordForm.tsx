@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Button from "@/components/Button";
-import api from "@/lib/api";
-
+import { createApi } from "@/lib/api";
 
 interface ForgotPasswordFormProps {
   onSuccess: () => void;
@@ -26,7 +25,7 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
       setFeedback("Si la cuenta existe, recibirás un correo con instrucciones.");
       setIsLoading(false);
       onSuccess();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setFeedback("Error al procesar la solicitud. Intenta de nuevo.");
       setIsLoading(false);
@@ -34,11 +33,12 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
   };
 
   return (
-    <form className="w-full" onSubmit={handleSubmit}>
+    <form
+      className="w-full"
+      onSubmit={handleSubmit}
+    >
       <h2 className="mb-2 text-2xl font-bold">¿Olvidaste tu contraseña?</h2>
-      <p className="pointer-events-none mb-4 text-sm text-gray-500">
-        Ingresa tu correo electrónico y te enviaremos un enlace para restablecerla.
-      </p>
+      <p className="pointer-events-none mb-4 text-sm text-gray-500">Ingresa tu correo electrónico y te enviaremos un enlace para restablecerla.</p>
 
       <div className="mb-4">
         <label className="block text-sm font-medium">Correo electrónico</label>
@@ -51,7 +51,10 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
           required
         />
       </div>
-      <Button btnText={isLoading ? "Enviando..." : "Enviar enlace de recuperación"} disabled={isLoading} />
+      <Button
+        btnText={isLoading ? "Enviando..." : "Enviar enlace de recuperación"}
+        disabled={isLoading}
+      />
       {feedback && <p className="mt-4 text-center text-sm">{feedback}</p>}
     </form>
   );

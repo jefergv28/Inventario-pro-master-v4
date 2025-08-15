@@ -9,7 +9,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
 import { useNotification } from "@/app/context/NotificationContext";
-import api from "@/lib/api";
+import { createApi } from "@/lib/api";
+
+const showModal = (msg: React.ReactNode) => {
+  alert(msg); // o un toast/modal personalizado
+};
+
+const api = createApi(showModal); // ✅ ahora sí se usa
 
 // Backend URL configurable
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";
