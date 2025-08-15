@@ -41,19 +41,23 @@ export default function StockPage() {
 
   const [stockEditando, setStockEditando] = useState<Stock | null>(null);
 
+  // Leer token de cookies al cargar
   useEffect(() => {
     const t = Cookies.get("token");
     setToken(t || null);
   }, []);
 
+  // Modal simple para mostrar mensajes
   const showModal = (msg: React.ReactNode) => {
-    alert(msg); // o un toast/modal personalizado
+    alert(msg);
   };
 
-  const api = createApi(showModal); // ✅ ahora sí se usa
+  // Instancia de API
+  const api = createApi(showModal);
 
+  // Cargar stocks y productos
   useEffect(() => {
-    if (!token) return;
+    if (!api || !token) return;
 
     const fetchAll = async () => {
       try {
@@ -77,10 +81,7 @@ export default function StockPage() {
   };
 
   const cargarParaEditar = (stock: Stock) => {
-    console.log("Editando stock:", stock);
-
     setStockEditando(stock);
-
     setForm({
       productoId: stock.productoId.toString(),
       cantidadDisponible: stock.cantidadDisponible.toString(),
@@ -113,9 +114,7 @@ export default function StockPage() {
 
     try {
       if (stockEditando) {
-        // Editar stock existente: enviar POST con id incluido
         const stockDataConId = { ...stockData, id: stockEditando.id };
-
         const response = await api.post("/stocks", stockDataConId, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -133,7 +132,6 @@ export default function StockPage() {
 
         setStockEditando(null);
       } else {
-        // Crear nuevo stock
         const response = await api.post("/stocks", stockData, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -183,7 +181,7 @@ export default function StockPage() {
           value={form.productoId}
           onChange={handleInputChange}
           className="w-full rounded border border-gray-400 p-2 text-black dark:bg-gray-900 dark:text-white"
-          disabled={!!stockEditando} // No permitir cambiar producto al editar
+          disabled={!!stockEditando}
         >
           <option
             value=""
@@ -271,7 +269,7 @@ export default function StockPage() {
                 transition={{ delay: index * 0.05 }}
                 className="border-b border-gray-300 dark:border-gray-600"
               >
-                <td className="px-4 py-2 text-gray-800 dark:text-white"> {stock.productoNombre}</td>
+                <td className="px-4 py-2 text-gray-800 dark:text-white">{stock.productoNombre}</td>
                 <td className="px-4 py-2 text-gray-800 dark:text-white">{stock.cantidadDisponible}</td>
                 <td className="px-4 py-2 text-gray-800 dark:text-white">{stock.cantidadMinima}</td>
                 <td className="px-4 py-2 text-gray-800 dark:text-white">{stock.cantidadMaxima}</td>
