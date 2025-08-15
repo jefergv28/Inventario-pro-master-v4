@@ -12,6 +12,8 @@ export interface Producto {
 }
 
 const agregarProducto = async (producto: Producto, token: string) => {
+  const api = createApi((msg) => alert(msg)); // ⚡ Usamos createApi
+
   try {
     const formData = new FormData();
     formData.append("name", producto.name);
@@ -19,7 +21,6 @@ const agregarProducto = async (producto: Producto, token: string) => {
     formData.append("description", producto.description);
     formData.append("categoryId", producto.category.toString());
     formData.append("providerId", producto.provider.toString());
-
     formData.append("price", producto.price.toString());
 
     if (producto.image instanceof File) {
