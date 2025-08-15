@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Filter, Edit, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import useProductos from "@/app/hooks/useProductos";
-import api from "@/app/hooks/useApi";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import axios from "axios";
 import { useNotification } from "@/app/context/NotificationContext";
+import api from "@/lib/api";
 
 // Backend URL configurable
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";

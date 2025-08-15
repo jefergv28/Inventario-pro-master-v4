@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import Cookies from "js-cookie";
-import { Producto } from "@/app/services/agregarProducto";
-import useEditarProducto from "@/app/hooks/useEditarProducto";
 import { useNotification } from "@/app/context/NotificationContext";
+import api from "@/lib/api";
 
 interface Categoria {
   id: number;
@@ -30,8 +28,6 @@ const EditProductPage = () => {
   const { id: productId } = useParams();
   const productIdString = Array.isArray(productId) ? productId[0] : productId;
 
-  const { editarProducto, loading, error } = useEditarProducto();
-
   const [product, setProduct] = useState({
     name: "",
     quantity: 0,
@@ -51,30 +47,18 @@ const EditProductPage = () => {
     image: "",
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+  // Obtener producto
   useEffect(() => {
     if (!productIdString) return;
-
     const fetchProducto = async () => {
       try {
-        const token = Cookies.get("token");
-        console.log("Token en fetchProducto:", token);
-        if (!token) {
-          console.error("No hay token disponible");
-          throw new Error("Usuario no autenticado");
-        }
-
-       const response = await fetch(`${API_URL}/productos/${productIdString}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-        if (!response.ok) throw new Error("Error al obtener el producto");
-
-        const data = await response.json();
-
+        const { data } = await api.get(`/productos/${productIdString}`);
         setProduct({
           name: data.nombreProducto,
           quantity: data.cantidadProducto,
@@ -88,42 +72,32 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         console.error("Error al cargar producto:", err);
       }
     };
-
     fetchProducto();
-  }, [API_URL, productIdString]);
+  }, [productIdString]);
 
+  // Obtener categorías
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const res = await fetch("http://NEXT_PUBLIC_API_URL/categorias");
-        if (!res.ok) throw new Error("Error al obtener categorías");
-        const data = await res.json();
+        const { data } = await api.get("/categorias");
         setCategorias(data);
       } catch (err) {
         console.error(err);
       }
     };
-
     fetchCategorias();
   }, []);
 
+  // Obtener proveedores
   useEffect(() => {
     const fetchProveedores = async () => {
       try {
-        const token = Cookies.get("token");
-        const res = await fetch("http://NEXT_PUBLIC_API_URL/proveedores", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) throw new Error("Error al obtener proveedores");
-        const data = await res.json();
+        const { data } = await api.get("/proveedores");
         setProveedores(data);
       } catch (err) {
         console.error(err);
       }
     };
-
     fetchProveedores();
   }, []);
 
@@ -134,7 +108,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       category: product.category === 0 ? "La categoría es obligatoria." : "",
       provider: product.provider === 0 ? "El proveedor es obligatorio." : "",
       price: product.price <= 0 ? "El precio debe ser un número positivo." : "",
-      image: "", // No obligamos a subir nueva imagen
+      image: "",
     };
 
     setErrors(newErrors);
@@ -159,24 +133,45 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     e.preventDefault();
     if (!validate() || !productIdString) return;
 
-    const producto: Producto = {
-      id: Number(productIdString),
-      name: product.name,
-      quantity: product.quantity,
-      description: product.description,
-      category: product.category,
-      provider: product.provider,
-      price: product.price,
-      image: product.image,
-    };
+    const formData = new FormData();
+    formData.append("name", product.name);
+    formData.append("quantity", String(product.quantity));
+    formData.append("description", product.description);
+    formData.append("category", String(product.category));
+    formData.append("provider", String(product.provider));
+    formData.append("price", String(product.price));
+    if (product.image) {
+      formData.append("image", product.image);
+    }
 
-    await editarProducto(productIdString, producto);
-    const mensajeExito = "¡Producto actualizado correctamente!";
-    setSuccessMessage(mensajeExito);
-    addNotification(mensajeExito, "success");
-    setTimeout(() => {
-      router.push("/dashboard/productos");
-    }, 1500);
+    setLoading(true);
+    setError(null);
+
+    try {
+      await api.put(`/productos/${productIdString}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const mensajeExito = "¡Producto actualizado correctamente!";
+      setSuccessMessage(mensajeExito);
+      addNotification(mensajeExito, "success");
+      setTimeout(() => {
+        router.push("/dashboard/productos");
+      }, 1500);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error(err);
+        // err.message es seguro
+        setError(err.message || "Error al actualizar producto");
+      } else if (typeof err === "object" && err !== null && "response" in err) {
+        // si es un objeto con response, lo usamos
+        const e = err as { response?: { data?: string } };
+        setError(e.response?.data || "Error al actualizar producto");
+      } else {
+        setError("Error al actualizar producto");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -261,7 +256,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
           type="file"
           accept="image/*"
           onChange={handleImageChange}
-          className={`input w-full`}
+          className="input w-full"
         />
 
         <textarea

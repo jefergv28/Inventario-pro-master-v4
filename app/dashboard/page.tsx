@@ -10,7 +10,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import api from "@/app/hooks/useApi"; // Importa tu hook de la API
+import api from "@/lib/api";
+
 
 interface JwtPayload {
   exp: number;

@@ -3,30 +3,21 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import useAgregarProducto from "@/app/hooks/useAgregarProducto";
-import { Producto } from "@/app/services/agregarProducto";
-import Cookies from "js-cookie";
+import { getCategorias, getProveedores, crearProducto } from "@/app/services/api";
 import Modal from "@/components/modal/Modal";
+import { AxiosError } from "axios";
 
 interface Categoria {
   id: number;
   nombre: string;
 }
-
 interface Proveedor {
   id: number;
   nombre: string;
-  contacto: string;
-  usuario: {
-    id: number;
-    name: string;
-    email: string;
-  };
 }
 
 const NewProductPage = () => {
   const router = useRouter();
-  const { agregarProducto, loading, error, setError } = useAgregarProducto();
 
   const [product, setProduct] = useState({
     name: "",
@@ -50,54 +41,15 @@ const NewProductPage = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";
-
-  // Categorías
   useEffect(() => {
-    const fetchCategorias = async () => {
-      try {
-        const response = await fetch(`${backendUrl}/categorias`);
-        if (!response.ok) {
-          throw new Error(`Error al obtener categorías`);
-        }
-        const data = await response.json();
-        setCategorias(data);
-      } catch (error) {
-        console.error("Error al obtener categorías:", error);
-      }
-    };
-
-    fetchCategorias();
-  }, [backendUrl]);
-
-  // Proveedores
+    getCategorias().then(setCategorias).catch(console.error);
+  }, []);
   useEffect(() => {
-    const fetchProveedores = async () => {
-      try {
-        const token = Cookies.get("token");
-        if (!token) throw new Error("No se encontró token de autenticación");
-
-        const response = await fetch(`${backendUrl}/proveedores`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`Error al obtener proveedores: ${response.status} - ${text}`);
-        }
-
-        const data = await response.json();
-        setProveedores(data);
-      } catch (error) {
-        console.error("Error al obtener proveedores:", error);
-      }
-    };
-
-    fetchProveedores();
-  }, [backendUrl]);
+    getProveedores().then(setProveedores).catch(console.error);
+  }, []);
 
   const validate = () => {
     const newErrors = {
@@ -108,72 +60,56 @@ const NewProductPage = () => {
       price: product.price <= 0 ? "El precio debe ser un número positivo." : "",
       image: !product.image ? "La imagen es obligatoria." : "",
     };
-
     setErrors(newErrors);
-    return Object.values(newErrors).every((error) => !error);
+    return Object.values(newErrors).every((e) => !e);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProduct((prev) => ({
       ...prev,
-      [name]: name === "quantity" || name === "price" || name === "category" || name === "provider" ? Number(value) || 0 : value,
+      [name]: ["quantity", "price", "category", "provider"].includes(name) ? Number(value) || 0 : value,
     }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setProduct((prev) => ({
-        ...prev,
-        image: e.target.files![0],
-      }));
+    if (e.target.files?.[0]) {
+      setProduct((prev) => ({ ...prev, image: e.target.files![0] }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const archivo = product.image;
-
-    if (archivo && archivo instanceof File) {
-      const tipoPermitido = ["image/png", "image/jpeg", "image/jpg"];
-
-      if (!tipoPermitido.includes(archivo.type)) {
-        setError("Solo se permiten imágenes PNG, JPG o JPEG.");
-        return;
-      }
-    }
     if (!validate()) return;
 
-    try {
-      const producto: Producto = {
-        name: product.name,
-        quantity: product.quantity,
-        description: product.description,
-        category: product.category,
-        provider: product.provider,
-        price: product.price,
-        image: product.image,
-      };
+    const archivo = product.image;
+    if (archivo && !["image/png", "image/jpeg", "image/jpg"].includes(archivo.type)) {
+      setError("Solo se permiten imágenes PNG, JPG o JPEG.");
+      return;
+    }
 
-      const success = await agregarProducto(producto);
-
-      if (success) {
-        setSuccessMessage("¡Producto agregado correctamente!");
-        setTimeout(() => {
-          router.push("/dashboard/productos");
-        }, 1500);
-
-        setProduct({
-          name: "",
-          quantity: 0,
-          description: "",
-          category: 0,
-          provider: 0,
-          price: 0,
-          image: null,
-        });
+    const formData = new FormData();
+    Object.entries(product).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        if (value instanceof File ) {
+          formData.append(key, value); // Imagen o archivo
+        } else {
+          formData.append(key, String(value)); // Texto o número
+        }
       }
-    } catch {}
+    });
+
+    setLoading(true);
+    try {
+      await crearProducto(formData);
+      setSuccessMessage("¡Producto agregado correctamente!");
+      setTimeout(() => router.push("/dashboard/productos"), 1500);
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string }>;
+      setError(err.response?.data?.message || "Error al agregar producto");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -187,7 +123,7 @@ const NewProductPage = () => {
         onSubmit={handleSubmit}
         className="space-y-4"
       >
-        {/* Nombre */}
+        {/* Campos de formulario */}
         <input
           type="text"
           name="name"
@@ -198,7 +134,6 @@ const NewProductPage = () => {
         />
         {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
 
-        {/* Cantidad */}
         <input
           type="number"
           name="quantity"
@@ -209,7 +144,6 @@ const NewProductPage = () => {
         />
         {errors.quantity && <p className="mt-1 text-sm text-red-500">{errors.quantity}</p>}
 
-        {/* Categoría */}
         <select
           name="category"
           value={product.category}
@@ -217,18 +151,17 @@ const NewProductPage = () => {
           className={`input w-full ${errors.category ? "border-red-500" : ""}`}
         >
           <option value={0}>Selecciona una categoría</option>
-          {categorias.map((categoria) => (
+          {categorias.map((c) => (
             <option
-              key={categoria.id}
-              value={categoria.id}
+              key={c.id}
+              value={c.id}
             >
-              {categoria.nombre}
+              {c.nombre}
             </option>
           ))}
         </select>
         {errors.category && <p className="mt-1 text-sm text-red-500">{errors.category}</p>}
 
-        {/* Proveedor */}
         <select
           name="provider"
           value={product.provider}
@@ -236,30 +169,28 @@ const NewProductPage = () => {
           className={`input w-full ${errors.provider ? "border-red-500" : ""}`}
         >
           <option value={0}>Selecciona un proveedor</option>
-          {proveedores.map((prov) => (
+          {proveedores.map((p) => (
             <option
-              key={prov.id}
-              value={prov.id}
+              key={p.id}
+              value={p.id}
             >
-              {prov.nombre}
+              {p.nombre}
             </option>
           ))}
         </select>
         {errors.provider && <p className="mt-1 text-sm text-red-500">{errors.provider}</p>}
 
-        {/* Precio */}
         <input
           type="number"
           name="price"
           placeholder="Precio"
+          step="0.01"
           value={product.price}
           onChange={handleChange}
-          step="0.01"
           className={`input w-full ${errors.price ? "border-red-500" : ""}`}
         />
         {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
 
-        {/* Imagen */}
         <input
           type="file"
           accept="image/png, image/jpeg, image/jpg"
@@ -268,7 +199,6 @@ const NewProductPage = () => {
         />
         {errors.image && <p className="mt-1 text-sm text-red-500">{errors.image}</p>}
 
-        {/* Descripción */}
         <textarea
           name="description"
           placeholder="Descripción (opcional)"
@@ -287,12 +217,13 @@ const NewProductPage = () => {
           {loading ? "Agregando..." : "Agregar Producto"}
         </Button>
       </form>
+
       <Modal
         isOpen={!!error}
         title="Error al agregar producto"
         message={error}
         onlyMessage
-        onClose={() => setError(null)} // ← correcto
+        onClose={() => setError(null)}
       />
     </div>
   );

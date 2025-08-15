@@ -7,8 +7,8 @@ import { FaUserCog, FaBell, FaGlobe, FaLock, FaKey, FaEye, FaEyeSlash } from "re
 import { motion } from "framer-motion";
 import Modal from "@/components/modal/Modal";
 import { toast } from "sonner";
-import api from "@/app/hooks/useApi";
 import { useNetAuth } from "@/app/hooks/useNetAuth"; // Importamos el hook
+import api from "@/lib/api";
 
 const SettingsPage = () => {
   // Usamos el estado global del hook, incluyendo isLoading

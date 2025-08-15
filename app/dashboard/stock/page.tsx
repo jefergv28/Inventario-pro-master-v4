@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import api from "@/app/hooks/useApi";
 import Cookies from "js-cookie";
 import Footer from "../layout/Footer";
+import api from "@/lib/api";
 
 interface Producto {
   id: number;

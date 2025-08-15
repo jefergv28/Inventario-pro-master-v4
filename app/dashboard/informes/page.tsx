@@ -4,7 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Footer from "../layout/Footer";
 import { AxiosRequestConfig } from "axios"; // <-- Importa el tipo de configuración de Axios
-import api from "@/app/hooks/useApi";
+import api from "@/lib/api";
+
 
 // Se usan para la animación de los botones
 const buttonVariants = {

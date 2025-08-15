@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import axios from "axios";
 import Footer from "../layout/Footer";
-import Cookies from "js-cookie";
+import api from "@/lib/api"; // 👈 Cliente centralizado
 
 interface Movimiento {
   id: number;
   fecha: string;
-  nombreUsuario: string; // <-- Corregido
-  nombreProducto: string; // <-- Corregido
+  nombreUsuario: string;
+  nombreProducto: string;
   tipo: string;
   cantidad: number;
 }
@@ -18,29 +17,26 @@ interface Movimiento {
 interface MovimientoBackend {
   id: number;
   fecha: string;
-  nombreUsuario: string; // <-- Corregido
-  nombreProducto: string; // <-- Corregido
+  nombreUsuario: string;
+  nombreProducto: string;
   tipoMovimiento: string;
   cantidad: number;
 }
 
 const MovementHistoryPage = () => {
   const [movements, setMovements] = useState<Movimiento[]>([]);
+  const [filters, setFilters] = useState({
+    fecha: "",
+    nombreUsuario: "",
+    nombreProducto: "",
+    tipo: "",
+  });
 
-  // CORRECCIÓN: El estado del filtro debe usar los nombres de las propiedades correctas
-  const [filters, setFilters] = useState({ fecha: "", nombreUsuario: "", nombreProducto: "", tipo: "" });
-
-  const token = Cookies.get("token");
-
-  // CORRECCIÓN: El useEffect ahora tiene la estructura correcta.
   useEffect(() => {
     const fetchMovements = async () => {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";
-
-        const res = await axios.get<MovimientoBackend[]>(`${backendUrl}/historial`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
+        // Ahora no ponemos token ni baseURL aquí, `api` lo hace automáticamente
+        const res = await api.get<MovimientoBackend[]>("/historial");
 
         const movimientosMapeados: Movimiento[] = res.data.map((m) => ({
           id: m.id,
@@ -57,14 +53,12 @@ const MovementHistoryPage = () => {
       }
     };
 
-    fetchMovements(); // <-- Ahora sí se llama la función dentro del useEffect
-  }, [token]); // <-- El useEffect se cierra correctamente aquí.
+    fetchMovements();
+  }, []);
 
-  // Ahora, el filtrado es una variable local en el renderizado del componente.
   const filteredMovements = movements.filter(
     (m) =>
       (!filters.fecha || m.fecha === filters.fecha) &&
-      // CORRECCIÓN: Usar los nombres de propiedades correctos del DTO
       (!filters.nombreUsuario || m.nombreUsuario.toLowerCase().includes(filters.nombreUsuario.toLowerCase())) &&
       (!filters.nombreProducto || m.nombreProducto.toLowerCase().includes(filters.nombreProducto.toLowerCase())) &&
       (!filters.tipo || m.tipo.toUpperCase() === filters.tipo.toUpperCase()),
@@ -86,14 +80,12 @@ const MovementHistoryPage = () => {
           type="text"
           placeholder="Usuario"
           className="input"
-          // CORRECCIÓN: Actualizar el estado del filtro con el nombre de la propiedad correcta
           onChange={(e) => setFilters({ ...filters, nombreUsuario: e.target.value })}
         />
         <input
           type="text"
           placeholder="Producto"
           className="input"
-          // CORRECCIÓN: Actualizar el estado del filtro con el nombre de la propiedad correcta
           onChange={(e) => setFilters({ ...filters, nombreProducto: e.target.value })}
         />
         <select
@@ -128,7 +120,6 @@ const MovementHistoryPage = () => {
                 className="border-b"
               >
                 <td className="table-cell">{movement.fecha}</td>
-                {/* CORRECCIÓN: Usar los nombres de propiedades correctos del DTO */}
                 <td className="table-cell">{movement.nombreUsuario}</td>
                 <td className="table-cell">{movement.nombreProducto}</td>
                 <td className={`table-cell font-bold ${movement.tipo.toUpperCase() === "ENTRADA" ? "text-green-500" : "text-red-500"}`}>

@@ -5,7 +5,8 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Usuario } from "../types/usuario";
-import api from "./useApi"; // Asegúrate de que esta ruta sea correcta
+import api from "@/lib/api";
+
 
 export function useNetAuth() {
   const router = useRouter();

@@ -6,9 +6,9 @@ import Footer from "../layout/Footer";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Modal from "@/components/modal/Modal";
-import api from "@/app/hooks/useApi";
 import { toast } from "sonner";
 import NewUserForm from "@/components/NewUserForm";
+import api from "@/lib/api";
 
 
 // Define la interfaz del usuario que llega desde el backend

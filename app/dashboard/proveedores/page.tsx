@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import api from "@/app/hooks/useApi";
 import Footer from "../layout/Footer";
 import axios from "axios";
 import Modal from "@/components/modal/Modal";
 import { useNotification } from "@/app/context/NotificationContext";
+import api from "@/lib/api";
 
 interface Proveedor {
   id: number;

@@ -1,4 +1,5 @@
-import api from "../hooks/useApi";
+import api from "@/lib/api";
+
 
 export interface Producto {
   id?: number;

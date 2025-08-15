@@ -5,9 +5,9 @@ import { Filter, Loader2, Eye } from "lucide-react";
 import Footer from "../layout/Footer";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import api from "@/app/hooks/useApi";
 import { toast } from "sonner";
 import Modal from "@/components/modal/Modal";
+import api from "@/lib/api";
 
 type User = {
   id: string;

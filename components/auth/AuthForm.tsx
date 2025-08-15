@@ -9,11 +9,9 @@ import Button from "../Button";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import SocialAuth from "./SocialAuth";
 import Cookie from "js-cookie";
-import api from "@/app/hooks/useApi";
 import Modal from "../modal/Modal"; // Ajusta la ruta si es necesario
 import ForgotPasswordForm from "../ForgotPasswordForm";
-
-
+import api from "@/lib/api";
 
 type AuthFormProps = {
   type: "login" | "register";

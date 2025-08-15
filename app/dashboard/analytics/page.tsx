@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
-
+import api from "@/lib/api"; // 👈 Usamos el cliente centralizado
 import Footer from "../layout/Footer";
-// Importa solo los componentes que vas a usar
-// import StockComparison from "./componest/StockComparison";
-// import SupplierBarChart from "./componest/SupplierBarChart";
-// import SupplierPieChart from "./componest/SupplierPieChart";
 import { TrendStock } from "./componest/Trends";
 import { motion } from "framer-motion";
 
@@ -32,16 +26,9 @@ const AnalyticsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const backendUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/analiticas`;
-        const token = Cookies.get("token");
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
-
-        // Petición solo para Productos más movidos
-        const mostMovedResponse = await axios.get(`${backendUrl}/productos-mas-movidos`, { headers });
+        // Usamos el cliente `api` que ya incluye token y baseURL
+        const mostMovedResponse = await api.get("/api/analiticas/productos-mas-movidos");
         setMostMovedProducts(mostMovedResponse.data);
-
         setLoading(false);
       } catch (err) {
         console.error("Error al obtener datos de analíticas:", err);
@@ -65,7 +52,6 @@ const AnalyticsPage = () => {
     >
       <h1 className="title">Analítica de Inventario</h1>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {/* Mantenemos solo el componente de Productos más movidos */}
         <motion.div
           className="card col-span-1 rounded-2xl p-4 shadow-md md:col-span-2"
           variants={cardVariants}
@@ -73,44 +59,6 @@ const AnalyticsPage = () => {
           <h2 className="cart-title text-black dark:text-white">Productos más movidos</h2>
           <TrendStock data={mostMovedProducts} />
         </motion.div>
-
-        {/* Comentamos los demás gráficos */}
-        {/*
-        <motion.div
-          className="card rounded-2xl p-4 shadow-md"
-          variants={cardVariants}
-        >
-          <h2 className="cart-title text-black dark:text-white">Entradas vs Salidas en el tiempo</h2>
-          <TrendOverTime data={trendOverTimeData} />
-        </motion.div>
-        */}
-        {/*
-        <motion.div
-          className="card col-span-1 rounded-2xl p-4 shadow-md md:col-span-2"
-          variants={cardVariants}
-        >
-          <h2 className="cart-title text-black dark:text-white">Comparación de stock actual vs. histórico</h2>
-          <StockComparison />
-        </motion.div>
-        */}
-        {/*
-        <motion.div
-          className="card rounded-2xl p-4 shadow-md"
-          variants={cardVariants}
-        >
-          <h2 className="cart-title text-black dark:text-white">Distribución de proveedores</h2>
-          <SupplierPieChart />
-        </motion.div>
-        */}
-        {/*
-        <motion.div
-          className="card rounded-2xl p-4 shadow-md"
-          variants={cardVariants}
-        >
-          <h2 className="cart-title text-black dark:text-white">Productos más comprados por proveedor</h2>
-          <SupplierBarChart />
-        </motion.div>
-        */}
       </div>
       <Footer />
     </motion.div>

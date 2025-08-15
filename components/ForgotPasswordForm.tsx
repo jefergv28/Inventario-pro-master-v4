@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Button from "@/components/Button";
-import api from "@/app/hooks/useApi";
+import api from "@/lib/api";
+
 
 interface ForgotPasswordFormProps {
   onSuccess: () => void;
