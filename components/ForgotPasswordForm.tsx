@@ -13,6 +13,8 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
   const [feedback, setFeedback] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const api = createApi((msg) => alert(msg)); // ✅ inicializamos api
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -25,8 +27,8 @@ const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
       setFeedback("Si la cuenta existe, recibirás un correo con instrucciones.");
       setIsLoading(false);
       onSuccess();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
+      console.error("Error en forgot-password:", err);
       setFeedback("Error al procesar la solicitud. Intenta de nuevo.");
       setIsLoading(false);
     }
