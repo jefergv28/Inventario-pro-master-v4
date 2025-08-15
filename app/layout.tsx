@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
+import Modal from "@/components/modal/Modal";
+import { ModalProvider, useModal } from "./context/ModalContext";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,6 +24,19 @@ export const metadata: Metadata = {
   },
 };
 
+// Componente para mostrar el modal global
+const ModalWrapper = () => {
+  const { isOpen, message, hideModal } = useModal();
+  return (
+    <Modal
+      isOpen={isOpen}
+      onlyMessage
+      message={message}
+      onClose={hideModal}
+    />
+  );
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -33,7 +49,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           defaultTheme="system"
           enableSystem
         >
-          {children}
+          <ModalProvider>
+            {children}
+            <ModalWrapper />
+          </ModalProvider>
         </ThemeProvider>
       </body>
     </html>

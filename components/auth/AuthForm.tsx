@@ -9,9 +9,9 @@ import Button from "../Button";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import SocialAuth from "./SocialAuth";
 import Cookie from "js-cookie";
-import Modal from "../modal/Modal"; // Ajusta la ruta si es necesario
+import Modal from "../modal/Modal";
 import ForgotPasswordForm from "../ForgotPasswordForm";
-import api from "@/lib/api";
+import { createApi } from "@/lib/api";
 
 type AuthFormProps = {
   type: "login" | "register";
@@ -19,42 +19,25 @@ type AuthFormProps = {
 
 const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  // ¡CORRECCIÓN AQUÍ! Se declaran los estados por separado
-  const [errors, setErrors] = useState<{
-    fullName?: string;
-    email?: string;
-    password?: string;
-  }>({});
-  const [feedback, setFeedback] = useState<string>("");
+  const [errors, setErrors] = useState<{ fullName?: string; email?: string; password?: string }>({});
+  const [feedback, setFeedback] = useState("");
+  const [modalMessage, setModalMessage] = useState<string | null>(null);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
 
   const router = useRouter();
 
-  // Función para cerrar el modal después de un envío exitoso
-  const handleForgotPasswordSuccess = () => {
-    setIsForgotPasswordModalOpen(false);
-  };
+  const handleForgotPasswordSuccess = () => setIsForgotPasswordModalOpen(false);
 
-  // Validaciones igual que antes...
-  const validateFullName = (value: string): string => {
-    if (value.trim().length < 3) return "El nombre debe tener al menos 3 caracteres.";
-    return "";
-  };
-  const validateEmail = (value: string): string => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) return "Ingresa un correo válido.";
-    return "";
-  };
-  const validatePassword = (value: string): string => {
-    if (value.length < 6) return "La contraseña debe tener al menos 6 caracteres.";
-    return "";
-  };
+  // Validaciones
+  const validateFullName = (value: string) => (value.trim().length < 3 ? "El nombre debe tener al menos 3 caracteres." : "");
+  const validateEmail = (value: string) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? "" : "Ingresa un correo válido.");
+  const validatePassword = (value: string) => (value.length < 6 ? "La contraseña debe tener al menos 6 caracteres." : "");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: string): void => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
     const { value } = e.target;
     const newErrors = { ...errors };
 
@@ -82,10 +65,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
     };
     setErrors(newErrors);
 
-    if (Object.values(newErrors).some((error) => error)) {
+    if (Object.values(newErrors).some((err) => err)) {
       setFeedback("Por favor corrige los errores antes de enviar el formulario.");
       return;
     }
+
+    const api = createApi((msg: React.ReactNode) => {
+      setModalMessage(typeof msg === "string" ? msg : JSON.stringify(msg));
+    });
 
     try {
       if (type === "register") {
@@ -100,8 +87,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         router.push("/dashboard");
       }
     } catch (err) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      setFeedback(`Error: ${error.response?.data?.message || error.message || "Ocurrió un error inesperado"}`);
+      // Ya el createApi muestra modal, aquí podemos log opcional
+      console.error(err);
     }
   };
 
@@ -166,7 +153,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
           {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
         </div>
 
-        {type === "login" && ( // Mostrar el botón solo en el login
+        {type === "login" && (
           <div className="mb-4 flex justify-end text-sm">
             <button
               type="button"
@@ -194,6 +181,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         <ForgotPasswordForm onSuccess={handleForgotPasswordSuccess} />
       </Modal>
 
+      {/* Modal para errores de red o API */}
+      <Modal
+        isOpen={!!modalMessage}
+        title="Error"
+        onClose={() => setModalMessage(null)}
+        onlyMessage
+      >
+        {modalMessage}
+      </Modal>
+
       {feedback && <p className="mt-4 text-center text-sm text-red-500">{feedback}</p>}
       <SocialAuth />
 
@@ -201,7 +198,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         {type === "login" ? "¿No tienes una cuenta?" : "¿Ya tienes una cuenta?"}
         <Link
           href={type === "login" ? "/auth/register" : "/auth/login"}
-          className="ml-1 text-blue-500 hover:underline" // Corregí el color aquí
+          className="ml-1 text-blue-500 hover:underline"
         >
           {type === "login" ? "Regístrate" : "Inicia sesión"}
         </Link>
