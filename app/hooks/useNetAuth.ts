@@ -1,9 +1,8 @@
-// app/hooks/useNetAuth.ts
 "use client";
 
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Usuario } from "../types/usuario";
 import { createApi } from "@/lib/api";
 
@@ -12,8 +11,12 @@ export function useNetAuth() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Nueva función para cargar los datos del usuario desde el backend
-  const fetchUsuario = async () => {
+  // ✅ Crear la instancia de la API
+  const showModal = (msg: React.ReactNode) => alert(msg);
+  const api = createApi(showModal);
+
+  // Función para cargar los datos del usuario desde el backend
+  const fetchUsuario = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await api.get("/api/usuarios/me");
@@ -21,29 +24,26 @@ export function useNetAuth() {
     } catch (err) {
       console.error("Error al cargar usuario:", err);
       setUsuario(null);
-      // Opcional: limpiar el token si falla la carga del usuario
       Cookies.remove("token");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [api]);
 
   useEffect(() => {
-    // El hook ahora llama a la API para obtener los datos más recientes
     const token = Cookies.get("token");
     if (token) {
       fetchUsuario();
     } else {
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchUsuario]);
 
   const logout = () => {
     Cookies.remove("token");
-    setUsuario(null); // Limpiar el estado del usuario
+    setUsuario(null);
     router.push("/auth/login");
   };
 
-  // El hook ahora devuelve también la función para actualizar el estado
   return { usuario, isLoading, logout, setUsuario };
 }
