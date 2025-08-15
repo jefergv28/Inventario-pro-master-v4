@@ -1,4 +1,5 @@
-// context/ModalContext.tsx
+"use client";
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface ModalContextProps {
@@ -24,11 +25,7 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
     setIsOpen(false);
   };
 
-  return (
-    <ModalContext.Provider value={{ showModal, hideModal, message, isOpen }}>
-      {children}
-    </ModalContext.Provider>
-  );
+  return <ModalContext.Provider value={{ showModal, hideModal, message, isOpen }}>{children}</ModalContext.Provider>;
 };
 
 export const useModal = () => {
