@@ -15,7 +15,7 @@ interface Proveedor {
   direccion: string;
 }
 
-export default function ProveedoresPage() {
+export default function ProveedoresClient() {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [form, setForm] = useState({ nombre: "", contacto: "", direccion: "" });
   const [token, setToken] = useState<string | null>(null);
@@ -25,21 +25,16 @@ export default function ProveedoresPage() {
 
   const { addNotification } = useNotification();
 
-  // Función para mostrar modal/alert solo en cliente
   const showModal = (msg: React.ReactNode) => {
     alert(msg);
   };
 
-  // Inicializa la API solo en cliente
   useEffect(() => {
     setApi(createApi(showModal));
-
-    // Aquí puedes obtener token desde cookies/localStorage si lo necesitas
     const t = localStorage.getItem("token") || null;
     setToken(t);
   }, []);
 
-  // Cargar proveedores desde el backend
   useEffect(() => {
     if (!api || !token) return;
 
@@ -72,7 +67,7 @@ export default function ProveedoresPage() {
       setProveedores((prev) => [...prev, response.data]);
       setForm({ nombre: "", contacto: "", direccion: "" });
       addNotification("Proveedor agregado correctamente", "success");
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error al agregar proveedor", error);
       addNotification("Error al agregar proveedor", "error");
     }
@@ -87,7 +82,7 @@ export default function ProveedoresPage() {
       });
       setProveedores((prev) => prev.filter((p) => p.id !== id));
       addNotification("Proveedor eliminado correctamente", "success");
-    } catch (error: unknown) {
+    } catch (error) {
       const mensaje = "Error al eliminar proveedor";
       setMensajeModal(mensaje);
       setModalAbierto(true);
@@ -100,7 +95,6 @@ export default function ProveedoresPage() {
     <div className="space-y-6 p-6">
       <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Gestión de Proveedores</h1>
 
-      {/* Formulario */}
       <div className="space-y-2 rounded border border-gray-300 p-4 dark:border-gray-600">
         <h2 className="text-xl font-semibold text-gray-700 dark:text-white">Agregar Proveedor</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -136,7 +130,6 @@ export default function ProveedoresPage() {
         </div>
       </div>
 
-      {/* Tabla */}
       <table className="w-full table-auto border-collapse border border-gray-300 dark:border-gray-600">
         <thead className="bg-gray-200 dark:bg-gray-800">
           <tr>
