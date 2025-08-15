@@ -1,7 +1,4 @@
-// app/hooks/useProductos.ts
-
 import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
 
 import { mapBackendProductoToProducto, Producto } from "../dashboard/utils/transform";
 import { createApi } from "@/lib/api";
@@ -11,16 +8,13 @@ const useProductos = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Instancia de la API
+  const api = createApi((msg) => alert(msg));
+
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const token = Cookies.get("token");
-        const response = await api.get("/productos", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await api.get("/productos");
         const productosBackend = response.data;
         const productosTransformados = productosBackend.map(mapBackendProductoToProducto);
 
@@ -34,7 +28,7 @@ const useProductos = () => {
     };
 
     fetchProductos();
-  }, []);
+  }, [api]);
 
   return { productos, loading, error };
 };
