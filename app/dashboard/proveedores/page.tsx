@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Footer from "../layout/Footer";
-import axios from "axios";
 import Modal from "@/components/modal/Modal";
 import { useNotification } from "@/app/context/NotificationContext";
 import { createApi } from "@/lib/api";
+import { AxiosInstance } from "axios";
 
 interface Proveedor {
   id: number;
@@ -18,18 +18,31 @@ interface Proveedor {
 export default function ProveedoresPage() {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [form, setForm] = useState({ nombre: "", contacto: "", direccion: "" });
-  const [token] = useState(""); // Asegúrate de obtener el token JWT
+  const [token, setToken] = useState<string | null>(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [mensajeModal, setMensajeModal] = useState("");
+  const [api, setApi] = useState<AxiosInstance | null>(null);
+
   const { addNotification } = useNotification();
 
+  // Función para mostrar modal/alert solo en cliente
   const showModal = (msg: React.ReactNode) => {
-    alert(msg); // o un toast/modal personalizado
+    alert(msg);
   };
 
-  const api = createApi(showModal); // ✅ ahora sí se usa
-
+  // Inicializa la API solo en cliente
   useEffect(() => {
+    setApi(createApi(showModal));
+
+    // Aquí puedes obtener token desde cookies/localStorage si lo necesitas
+    const t = localStorage.getItem("token") || null;
+    setToken(t);
+  }, []);
+
+  // Cargar proveedores desde el backend
+  useEffect(() => {
+    if (!api || !token) return;
+
     const fetchData = async () => {
       try {
         const response = await api.get("/proveedores", {
@@ -41,14 +54,17 @@ export default function ProveedoresPage() {
         addNotification("Error cargando proveedores", "error");
       }
     };
+
     fetchData();
-  }, [token, addNotification, api]);
+  }, [api, token, addNotification]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const agregarProveedor = async () => {
+    if (!api || !token) return;
+
     try {
       const response = await api.post("/proveedores", form, {
         headers: { Authorization: `Bearer ${token}` },
@@ -56,30 +72,27 @@ export default function ProveedoresPage() {
       setProveedores((prev) => [...prev, response.data]);
       setForm({ nombre: "", contacto: "", direccion: "" });
       addNotification("Proveedor agregado correctamente", "success");
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error al agregar proveedor", error);
       addNotification("Error al agregar proveedor", "error");
     }
   };
 
   const eliminarProveedor = async (id: number) => {
+    if (!api || !token) return;
+
     try {
       await api.delete(`/proveedores/${id}`, {
-        withCredentials: true, // necesario si usas cookies
+        headers: { Authorization: `Bearer ${token}` },
       });
       setProveedores((prev) => prev.filter((p) => p.id !== id));
       addNotification("Proveedor eliminado correctamente", "success");
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        const mensaje = error.response?.data || "Error desconocido al eliminar proveedor";
-        setMensajeModal(mensaje);
-        setModalAbierto(true);
-        addNotification(mensaje, "error");
-      } else {
-        setMensajeModal("Error inesperado");
-        setModalAbierto(true);
-        addNotification("Error inesperado", "error");
-      }
+      const mensaje = "Error al eliminar proveedor";
+      setMensajeModal(mensaje);
+      setModalAbierto(true);
+      addNotification(mensaje, "error");
+      console.error(error);
     }
   };
 
