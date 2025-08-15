@@ -7,20 +7,11 @@ import { motion } from "framer-motion";
 import useProductos from "@/app/hooks/useProductos";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import axios from "axios";
 import { useNotification } from "@/app/context/NotificationContext";
 import { createApi } from "@/lib/api";
+import { AxiosInstance } from "axios";
 
-const showModal = (msg: React.ReactNode) => {
-  alert(msg); // o un toast/modal personalizado
-};
-
-const api = createApi(showModal); // ✅ ahora sí se usa
-
-// Backend URL configurable
-const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://NEXT_PUBLIC_API_URL";
-
-// Componente Modal con Tailwind
+// Modal genérico
 const Modal = ({
   isOpen,
   title,
@@ -87,25 +78,34 @@ const Modal = ({
 const ProductsPage = () => {
   const { productos = [], loading, error } = useProductos();
   const { addNotification } = useNotification();
+  const router = useRouter();
+
+  const [api, setApi] = useState<AxiosInstance | null>(null);
+
+  // Inicializamos API solo en cliente
+  useEffect(() => {
+    const showModal = (msg: React.ReactNode) => alert(msg);
+    setApi(createApi(showModal));
+  }, []);
+
   const [filterCategory, setFilterCategory] = useState("Todos");
   const [filterProvider, setFilterProvider] = useState("Todos");
   const [localProductos, setLocalProductos] = useState(productos);
-  const router = useRouter();
 
-  // Nuevos estados para modal
+  // Modal de confirmación y mensajes
   const [modalOpen, setModalOpen] = useState(false);
   const [productoAEliminar, setProductoAEliminar] = useState<number | null>(null);
   const [modalMensajeOpen, setModalMensajeOpen] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
-  // Actualizar localProductos cuando cambien productos de hook
+  // Actualizar productos locales
   useEffect(() => {
     setLocalProductos(productos);
   }, [productos]);
 
   const categorias = ["Todos", ...Array.from(new Set(localProductos.map((p) => p.categoria?.nombre || "Desconocida")))];
-
   const proveedores = ["Todos", ...Array.from(new Set(localProductos.map((p) => p.proveedor?.nombre || "Desconocido")))];
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
   const filteredProducts = localProductos.filter(
     (product) =>
@@ -113,56 +113,42 @@ const ProductsPage = () => {
       (filterProvider === "Todos" || product.proveedor?.nombre === filterProvider),
   );
 
-  console.log("Productos filtrados:", filteredProducts);
+  const handleEdit = (id: number) => router.push(`/dashboard/productos/editar/${id}`);
 
-  const handleEdit = (id: number) => {
-    router.push(`/dashboard/productos/editar/${id}`);
-  };
-
-  // En lugar de eliminar directamente, abrimos modal para confirmar
   const abrirConfirmacionEliminar = (id: number) => {
     setProductoAEliminar(id);
     setModalOpen(true);
   };
 
   const confirmarEliminar = async () => {
-    if (productoAEliminar === null) return;
+    if (productoAEliminar === null || !api) return;
     setModalOpen(false);
 
     try {
-      // Usamos api que ya tiene interceptor para el token, no hace falta pasarlo manual
-      const response = await api.delete(`/productos/${productoAEliminar}`, {
-        validateStatus: () => true,
-      });
+      const response = await api.delete(`/productos/${productoAEliminar}`, { validateStatus: () => true });
 
       if (response.status === 200 || response.status === 204) {
         setLocalProductos((prev) => prev.filter((p) => p.id !== productoAEliminar));
         setMensaje("Producto eliminado con éxito.");
         addNotification("Producto eliminado con éxito.", "success");
       } else if (response.status === 409) {
-        setMensaje("No se puede eliminar el producto porque está asociado a otras entidades (como movimientos).");
+        setMensaje("No se puede eliminar el producto porque está asociado a otras entidades.");
         addNotification("No se puede eliminar el producto porque está asociado a otras entidades.", "error");
       } else {
         setMensaje(`Error del servidor: ${response.status}`);
         addNotification(`Error del servidor: ${response.status}`, "error");
       }
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setMensaje("Error al eliminar producto: " + (err.response?.data || err.message));
-        addNotification("Error al eliminar producto: " + (err.response?.data || err.message), "error");
-      } else {
-        setMensaje("Error inesperado al eliminar producto.");
-        addNotification("Error inesperado al eliminar producto.", "error");
-      }
+        console.error(err);
+      setMensaje("Error inesperado al eliminar producto.");
+      addNotification("Error inesperado al eliminar producto.", "error");
     } finally {
       setModalMensajeOpen(true);
       setProductoAEliminar(null);
     }
   };
 
-  const cerrarModalMensaje = () => {
-    setModalMensajeOpen(false);
-  };
+  const cerrarModalMensaje = () => setModalMensajeOpen(false);
 
   if (loading) return <p aria-live="polite">Cargando productos...</p>;
   if (error) return <p className="text-red-500">Error al cargar productos: {error}</p>;
@@ -180,12 +166,7 @@ const ProductsPage = () => {
           value={filterCategory}
         >
           {categorias.map((categoria) => (
-            <option
-              key={categoria}
-              value={categoria}
-            >
-              {categoria}
-            </option>
+            <option key={categoria} value={categoria}>{categoria}</option>
           ))}
         </select>
 
@@ -195,30 +176,18 @@ const ProductsPage = () => {
           value={filterProvider}
         >
           {proveedores.map((proveedor) => (
-            <option
-              key={proveedor}
-              value={proveedor}
-            >
-              {proveedor}
-            </option>
+            <option key={proveedor} value={proveedor}>{proveedor}</option>
           ))}
         </select>
 
-        <Button
-          variant="outline"
-          onClick={() => {
-            setFilterCategory("Todos");
-            setFilterProvider("Todos");
-          }}
-        >
-          <Filter className="mr-2 h-5 w-5" />
-          Limpiar Filtros
+        <Button variant="outline" onClick={() => { setFilterCategory("Todos"); setFilterProvider("Todos"); }}>
+          <Filter className="mr-2 h-5 w-5" /> Limpiar Filtros
         </Button>
       </div>
 
       <div className="card">
         <div className="card-body p-0">
-          <div className="relative h-[500px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
+          <div className="relative h-[500px] w-full overflow-auto rounded-none [scrollbar-width:_thin]">
             {filteredProducts.length === 0 ? (
               <p className="text-center text-gray-500">No hay productos disponibles con los filtros seleccionados.</p>
             ) : (
@@ -256,29 +225,18 @@ const ProductsPage = () => {
                           <span className="text-gray-400">Sin imagen</span>
                         )}
                       </td>
-
                       <td className="table-cell">{product.nombreProducto}</td>
                       <td className="table-cell">{product.cantidadProducto}</td>
-                      <td className="table-cell">
-                        {typeof product.precioProducto === "number" ? `$${product.precioProducto.toLocaleString()}` : "—"}
-                      </td>
+                      <td className="table-cell">{typeof product.precioProducto === "number" ? `$${product.precioProducto.toLocaleString()}` : "—"}</td>
                       <td className="table-cell">{product.categoria?.nombre || "Desconocida"}</td>
                       <td className="table-cell">{product.proveedor?.nombre || "Desconocido"}</td>
                       <td className="table-cell">
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            onClick={() => handleEdit(product.id)}
-                          >
-                            <Edit className="mr-2 h-5 w-5" />
-                            Editar
+                          <Button variant="outline" onClick={() => handleEdit(product.id)}>
+                            <Edit className="mr-2 h-5 w-5" /> Editar
                           </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => abrirConfirmacionEliminar(product.id)}
-                          >
-                            <Trash2 className="mr-2 h-5 w-5" />
-                            Eliminar
+                          <Button variant="destructive" onClick={() => abrirConfirmacionEliminar(product.id)}>
+                            <Trash2 className="mr-2 h-5 w-5" /> Eliminar
                           </Button>
                         </div>
                       </td>
@@ -291,7 +249,7 @@ const ProductsPage = () => {
         </div>
       </div>
 
-      {/* Modal para confirmar eliminación */}
+      {/* Modal de confirmación */}
       <Modal
         isOpen={modalOpen}
         title="Confirmar eliminación"
@@ -302,11 +260,11 @@ const ProductsPage = () => {
         cancelText="Cancelar"
       />
 
-      {/* Modal para mensaje de éxito o error */}
+      {/* Modal de mensaje */}
       <Modal
         isOpen={modalMensajeOpen}
         message={mensaje}
-        onlyMessage={true}
+        onlyMessage
         onClose={cerrarModalMensaje}
       />
     </div>
