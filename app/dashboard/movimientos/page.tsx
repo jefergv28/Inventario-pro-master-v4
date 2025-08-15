@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Footer from "../layout/Footer";
-import { createApi } from "@/lib/api"; // 👈 Cliente centralizado
+import { createApi } from "@/lib/api";
 
 interface Movimiento {
   id: number;
@@ -32,16 +32,25 @@ const MovementHistoryPage = () => {
     tipo: "",
   });
 
+const [api, setApi] = useState<ReturnType<typeof createApi> | null>(null);
+
+  // Modal simple con alert (solo cliente)
   const showModal = (msg: React.ReactNode) => {
-    alert(msg); // 👈 aquí podrías usar un toast o modal más avanzado
+    alert(msg);
   };
 
-  const api = createApi(showModal);
-
+  // Inicializa api solo en cliente
   useEffect(() => {
+    const apiInstance = createApi(showModal);
+    setApi(apiInstance);
+  }, []);
+
+  // Cargar movimientos solo cuando api esté listo
+  useEffect(() => {
+    if (!api) return;
+
     const fetchMovements = async () => {
       try {
-        // Ahora no ponemos token ni baseURL aquí, `api` lo hace automáticamente
         const res = await api.get<MovimientoBackend[]>("/historial");
 
         const movimientosMapeados: Movimiento[] = res.data.map((m) => ({
@@ -67,13 +76,15 @@ const MovementHistoryPage = () => {
       (!filters.fecha || m.fecha === filters.fecha) &&
       (!filters.nombreUsuario || m.nombreUsuario.toLowerCase().includes(filters.nombreUsuario.toLowerCase())) &&
       (!filters.nombreProducto || m.nombreProducto.toLowerCase().includes(filters.nombreProducto.toLowerCase())) &&
-      (!filters.tipo || m.tipo.toUpperCase() === filters.tipo.toUpperCase()),
+      (!filters.tipo || m.tipo.toUpperCase() === filters.tipo.toUpperCase())
   );
 
   return (
     <div className="space-y-6 p-6">
       <h1 className="title">Historial de Movimientos</h1>
-      <p className="text-gray-600 dark:text-white/50">Registros de entradas y salidas de productos.</p>
+      <p className="text-gray-600 dark:text-white/50">
+        Registros de entradas y salidas de productos.
+      </p>
 
       {/* Filtros */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -117,30 +128,31 @@ const MovementHistoryPage = () => {
             </tr>
           </thead>
           <tbody className="table-body">
-            {filteredMovements.map((movement, index) => (
-              <motion.tr
-                key={movement.id || index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="border-b"
-              >
-                <td className="table-cell">{movement.fecha}</td>
-                <td className="table-cell">{movement.nombreUsuario}</td>
-                <td className="table-cell">{movement.nombreProducto}</td>
-                <td className={`table-cell font-bold ${movement.tipo.toUpperCase() === "ENTRADA" ? "text-green-500" : "text-red-500"}`}>
-                  {movement.tipo}
-                </td>
-                <td className="table-cell">{movement.cantidad}</td>
-              </motion.tr>
-            ))}
-
-            {filteredMovements.length === 0 && (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="py-4 text-center text-gray-500"
+            {filteredMovements.length > 0 ? (
+              filteredMovements.map((movement, index) => (
+                <motion.tr
+                  key={movement.id || index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className="border-b"
                 >
+                  <td className="table-cell">{movement.fecha}</td>
+                  <td className="table-cell">{movement.nombreUsuario}</td>
+                  <td className="table-cell">{movement.nombreProducto}</td>
+                  <td
+                    className={`table-cell font-bold ${
+                      movement.tipo.toUpperCase() === "ENTRADA" ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    {movement.tipo}
+                  </td>
+                  <td className="table-cell">{movement.cantidad}</td>
+                </motion.tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="py-4 text-center text-gray-500">
                   No hay movimientos que coincidan con los filtros.
                 </td>
               </tr>
