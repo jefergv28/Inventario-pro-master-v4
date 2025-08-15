@@ -6,11 +6,13 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import Image from "next/image";
 import Footer from "./layout/Footer";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { createApi } from "@/lib/api";
+import { toast } from "sonner";
+import { overviewData } from "../constants";
 
 interface JwtPayload {
   exp: number;
@@ -18,13 +20,9 @@ interface JwtPayload {
 
 interface Product {
   id: number;
-  // Cambia 'name' por 'nombreProducto'
   nombreProducto: string;
-  // Cambia 'price' por 'precioProducto'
   precioProducto: number;
-  // Cambia 'quantity' por 'cantidadProducto'
   cantidadProducto: number;
-  // Cambia 'description' por 'descripcionProducto'
   descripcionProducto: string;
   imageUrl: string;
   category: {
@@ -46,6 +44,30 @@ export default function Dashboard() {
 
   const token = Cookies.get("token");
 
+  const api = createApi((msg: React.ReactNode) => {
+    toast.error(msg?.toString() || "Ocurrió un error");
+  });
+
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const dashboardResponse = await api.get("/api/v1/dashboard");
+      const productsResponse = await api.get("/productos");
+      const recentProductsResponse = await api.get("/productos/recientes");
+
+      setTotalProducts(dashboardResponse?.data?.totalProductos ?? 0);
+      setTotalCategories(dashboardResponse?.data?.totalCategorias ?? 0);
+      setLowStockProducts(dashboardResponse?.data?.stockBajo ?? 0);
+      setAllProducts(productsResponse.data);
+      setRecentProducts(recentProductsResponse.data);
+    } catch (err: unknown) {
+      console.error("Error al obtener los datos del dashboard:", err);
+      toast.error("No se pudieron cargar los datos del dashboard.");
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
+
   useEffect(() => {
     if (!token) {
       router.push("/auth/login?expired=1");
@@ -58,45 +80,28 @@ export default function Dashboard() {
       if (decoded.exp < now) {
         Cookies.remove("token");
         router.push("/auth/login?expired=1");
-      } else {
-        // Llama a la función principal que carga todos los datos
-        fetchDashboardData();
+        return;
       }
+      fetchDashboardData();
     } catch {
       Cookies.remove("token");
       router.push("/auth/login?expired=1");
     }
-  }, [router, token]);
-
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    try {
-      // Usando el hook de la API para todas las peticiones
-      const dashboardResponse = await api.get("/api/v1/dashboard");
-      const productsResponse = await api.get("/productos");
-      const recentProductsResponse = await api.get("/productos/recientes");
-
-      setTotalProducts(dashboardResponse?.data?.totalProductos ?? 0);
-      setTotalCategories(dashboardResponse?.data?.totalCategorias ?? 0);
-      setLowStockProducts(dashboardResponse?.data?.stockBajo ?? 0);
-      setAllProducts(productsResponse.data);
-      setRecentProducts(recentProductsResponse.data);
-    } catch (error) {
-      console.error("Error al obtener los datos del dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchDashboardData, router, token]);
 
   if (loading) {
-    return <p className="text-center">Cargando datos del dashboard...</p>;
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <p className="text-center text-gray-500">Cargando datos del dashboard...</p>
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col gap-y-4">
       <h1 className="title">Dashboard</h1>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {/* Usando los datos de la API */}
         <Card
           icon={<Package size={26} />}
           title="Productos Totales"
@@ -113,13 +118,11 @@ export default function Dashboard() {
           icon={<List size={26} />}
           title="Últimos Movimientos"
           value="15,400"
-          percentage=""
         />
         <Card
           icon={<Layers size={26} />}
           title="Categorías de Productos"
           value={`${totalCategories} categorías`}
-          percentage=""
         />
       </div>
 
@@ -163,15 +166,13 @@ export default function Dashboard() {
                 />
                 <XAxis
                   dataKey="name"
-                  strokeWidth={0}
                   stroke={theme === "light" ? "#475569" : "#94a3b8"}
                   tickMargin={6}
                 />
                 <YAxis
                   dataKey="total"
-                  strokeWidth={0}
                   stroke={theme === "light" ? "#475569" : "#94a3b8"}
-                  tickFormatter={(value) => `$${value}`}
+                  tickFormatter={(v) => `$${v}`}
                   tickMargin={6}
                 />
                 <Area
@@ -185,40 +186,41 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
         </div>
+
         <div className="card col-span-1 md:col-span-2 lg:col-span-3">
           <div className="card-header">
             <p className="card-title">Últimos Productos Agregados</p>
           </div>
           <div className="card-body h-[300px] overflow-auto p-0">
-            {Array.isArray(recentProducts) &&
-              recentProducts.map((product: Product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between gap-x-4 py-2 pr-2"
-                >
-                  <Image
-                    src={product.imageUrl || "/uploads/default.jpg"}
-                    alt={product.nombreProducto || "Imagen de producto"}
-                    width={40}
-                    height={40}
-                    className="size-10 flex-shrink-0 rounded-full object-cover"
-                  />
-                  <div className="flex flex-col gap-y-2">
-                    <p className="font-medium text-slate-900 dark:text-slate-50">{product.nombreProducto}</p>
-                    <p className="font-sm text-slate-600 dark:text-slate-400">{product.category?.nombre}</p>
-                  </div>
-                  <p className="font-medium text-slate-900 dark:text-slate-50">Cantidad: {product.cantidadProducto}</p>
+            {recentProducts.map((product) => (
+              <div
+                key={product.id}
+                className="flex items-center justify-between gap-x-4 py-2 pr-2"
+              >
+                <Image
+                  src={product.imageUrl || "/uploads/default.jpg"}
+                  alt={product.nombreProducto || "Imagen de producto"}
+                  width={40}
+                  height={40}
+                  className="size-10 flex-shrink-0 rounded-full object-cover"
+                />
+                <div className="flex flex-col gap-y-2">
+                  <p className="font-medium text-slate-900 dark:text-slate-50">{product.nombreProducto}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{product.category?.nombre}</p>
                 </div>
-              ))}
+                <p className="font-medium text-slate-900 dark:text-slate-50">Cantidad: {product.cantidadProducto}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
       <div className="card">
         <div className="card-header">
           <p className="card-title">Productos</p>
         </div>
         <div className="card-body p-0">
-          <div className="relative h-[500px] w-full flex-shrink-0 overflow-auto rounded-none [scrollbar-width:_thin]">
+          <div className="relative h-[500px] w-full overflow-auto rounded-none [scrollbar-width:_thin]">
             <table className="table">
               <thead className="table-header">
                 <tr className="table-row">
@@ -231,54 +233,47 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="table-body">
-                {Array.isArray(allProducts) &&
-                  allProducts.map((product, index) => (
-                    <motion.tr
-                      key={product.id}
-                      className="table-row"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
-                    >
-                      <td className="table-cell">{product.id}</td>
-                      <td className="table-cell">
-                        {" "}
-                        {/* Nueva celda para la imagen */}
-                        <Image
-                          src={product.imageUrl || "/uploads/default.jpg"}
-                          alt={product.nombreProducto || "Imagen de producto"}
-                          width={40}
-                          height={40}
-                          className="size-10 flex-shrink-0 rounded-full object-cover"
-                        />
-                      </td>
-                      <td className="table-cell">
-                        <div className="flex w-max gap-x-4">
-                          <div className="flex flex-col">
-                            <p>{product.nombreProducto}</p>
-                            <p className="font-normal text-slate-600 dark:text-slate-400">{product.category?.nombre}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="table-cell">${product.precioProducto}</td>
-                      <td className="table-cell">{product.cantidadProducto} unds</td>
-                      <td className="table-cell">
-                        <div className="flex items-center gap-x-2">{product.descripcionProducto}</div>
-                      </td>
-                      {/* La columna de acciones ha sido eliminada */}
-                    </motion.tr>
-                  ))}
+                {allProducts.map((product, index) => (
+                  <motion.tr
+                    key={product.id}
+                    className="table-row"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                  >
+                    <td className="table-cell">{product.id}</td>
+                    <td className="table-cell">
+                      <Image
+                        src={product.imageUrl || "/uploads/default.jpg"}
+                        alt={product.nombreProducto || "Imagen de producto"}
+                        width={40}
+                        height={40}
+                        className="size-10 flex-shrink-0 rounded-full object-cover"
+                      />
+                    </td>
+                    <td className="table-cell">
+                      <div className="flex flex-col">
+                        <p>{product.nombreProducto}</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">{product.category?.nombre}</p>
+                      </div>
+                    </td>
+                    <td className="table-cell">${product.precioProducto}</td>
+                    <td className="table-cell">{product.cantidadProducto} unds</td>
+                    <td className="table-cell">{product.descripcionProducto}</td>
+                  </motion.tr>
+                ))}
               </tbody>
             </table>
           </div>
         </div>
       </div>
+
       <Footer />
     </div>
   );
 }
 
-// ... (El componente Card se mantiene igual)
+// Componente Card
 interface CardProps {
   icon: React.ReactNode;
   title: string;
@@ -312,11 +307,4 @@ function Card({ icon, title, value, percentage }: CardProps) {
   );
 }
 
-const overviewData = [
-  { name: "Enero", total: 100 },
-  { name: "Febrero", total: 200 },
-  { name: "Marzo", total: 150 },
-  { name: "Abril", total: 300 },
-  { name: "Mayo", total: 250 },
-  { name: "Junio", total: 400 },
-];
+// Datos de eje
