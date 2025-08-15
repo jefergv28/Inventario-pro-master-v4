@@ -1,183 +1,28 @@
-"use client";
+import dynamic from "next/dynamic";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import Footer from "../layout/Footer";
-import Modal from "@/components/modal/Modal";
-import { useNotification } from "@/app/context/NotificationContext";
-import { createApi } from "@/lib/api";
-import { AxiosInstance } from "axios";
+// Un componente de carga básico que puedes usar mientras se carga el cliente
+const LoadingPage = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <p className="text-xl text-gray-500 animate-pulse">Cargando...</p>
+  </div>
+);
 
-interface Proveedor {
-  id: number;
-  nombre: string;
-  contacto: string;
-  direccion: string;
-}
+// Importamos el componente del cliente de forma dinámica con SSR desactivado.
+// Esto evita el error "useModal() from server"
+const ProveedoresClient = dynamic(
+  () => import("@/components/ProveedoresClient"),
+  {
+    ssr: false,
+    loading: () => <LoadingPage />,
+  },
+);
 
-export default function ProveedoresClient() {
-  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
-  const [form, setForm] = useState({ nombre: "", contacto: "", direccion: "" });
-  const [token, setToken] = useState<string | null>(null);
-  const [modalAbierto, setModalAbierto] = useState(false);
-  const [mensajeModal, setMensajeModal] = useState("");
-  const [api, setApi] = useState<AxiosInstance | null>(null);
-
-  const { addNotification } = useNotification();
-
-  const showModal = (msg: React.ReactNode) => {
-    alert(msg);
-  };
-
-  useEffect(() => {
-    setApi(createApi(showModal));
-    const t = localStorage.getItem("token") || null;
-    setToken(t);
-  }, []);
-
-  useEffect(() => {
-    if (!api || !token) return;
-
-    const fetchData = async () => {
-      try {
-        const response = await api.get("/proveedores", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setProveedores(response.data);
-      } catch (error) {
-        console.error("Error cargando proveedores", error);
-        addNotification("Error cargando proveedores", "error");
-      }
-    };
-
-    fetchData();
-  }, [api, token, addNotification]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const agregarProveedor = async () => {
-    if (!api || !token) return;
-
-    try {
-      const response = await api.post("/proveedores", form, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProveedores((prev) => [...prev, response.data]);
-      setForm({ nombre: "", contacto: "", direccion: "" });
-      addNotification("Proveedor agregado correctamente", "success");
-    } catch (error) {
-      console.error("Error al agregar proveedor", error);
-      addNotification("Error al agregar proveedor", "error");
-    }
-  };
-
-  const eliminarProveedor = async (id: number) => {
-    if (!api || !token) return;
-
-    try {
-      await api.delete(`/proveedores/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProveedores((prev) => prev.filter((p) => p.id !== id));
-      addNotification("Proveedor eliminado correctamente", "success");
-    } catch (error) {
-      const mensaje = "Error al eliminar proveedor";
-      setMensajeModal(mensaje);
-      setModalAbierto(true);
-      addNotification(mensaje, "error");
-      console.error(error);
-    }
-  };
-
+// Este es el componente principal de la página, un Server Component.
+// Su única responsabilidad es renderizar el componente cliente.
+export default function ProveedoresPage() {
   return (
-    <div className="space-y-6 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Gestión de Proveedores</h1>
-
-      <div className="space-y-2 rounded border border-gray-300 p-4 dark:border-gray-600">
-        <h2 className="text-xl font-semibold text-gray-700 dark:text-white">Agregar Proveedor</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <input
-            name="nombre"
-            placeholder="Nombre"
-            value={form.nombre}
-            onChange={handleInputChange}
-            className="rounded border p-2 text-black dark:text-white"
-          />
-          <input
-            name="contacto"
-            placeholder="Contacto"
-            value={form.contacto}
-            onChange={handleInputChange}
-            className="rounded border p-2 text-black dark:text-white"
-          />
-          <input
-            name="direccion"
-            placeholder="Dirección"
-            value={form.direccion}
-            onChange={handleInputChange}
-            className="rounded border p-2 text-black dark:text-white"
-          />
-        </div>
-        <div className="pt-2">
-          <button
-            onClick={agregarProveedor}
-            className="rounded bg-green-600 px-4 py-2 text-white"
-          >
-            Guardar
-          </button>
-        </div>
-      </div>
-
-      <table className="w-full table-auto border-collapse border border-gray-300 dark:border-gray-600">
-        <thead className="bg-gray-200 dark:bg-gray-800">
-          <tr>
-            <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Nombre</th>
-            <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Contacto</th>
-            <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Dirección</th>
-            <th className="px-4 py-2 text-left text-gray-800 dark:text-white">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {proveedores.map((prov, index) => (
-            <motion.tr
-              key={prov.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="border-b border-gray-300 dark:border-gray-600"
-            >
-              <td className="px-4 py-2 text-gray-800 dark:text-white">{prov.nombre}</td>
-              <td className="px-4 py-2 text-gray-800 dark:text-white">{prov.contacto}</td>
-              <td className="px-4 py-2 text-gray-800 dark:text-white">{prov.direccion}</td>
-              <td className="px-4 py-2 text-gray-800 dark:text-white">
-                <button
-                  className="mr-2 rounded bg-blue-500 px-3 py-1 text-white"
-                  onClick={() => alert("Función de editar aún no implementada")}
-                >
-                  Editar
-                </button>
-                <button
-                  className="rounded bg-red-500 px-3 py-1 text-white"
-                  onClick={() => eliminarProveedor(prov.id)}
-                >
-                  Eliminar
-                </button>
-              </td>
-            </motion.tr>
-          ))}
-        </tbody>
-      </table>
-
-      <Modal
-        isOpen={modalAbierto}
-        message={mensajeModal}
-        onClose={() => setModalAbierto(false)}
-        onlyMessage
-      />
-
-      <Footer />
-    </div>
+    <main className="container mx-auto px-4 py-8">
+      <ProveedoresClient />
+    </main>
   );
 }
