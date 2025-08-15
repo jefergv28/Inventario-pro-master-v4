@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNotification } from "@/app/context/NotificationContext";
 import Footer from "./Footer";
-import { createApi } from "@/lib/api";
+import api from "@/app/hooks/useApi"; // import directo, no llamada
 
 interface Proveedor {
   id: number;
@@ -20,9 +20,6 @@ export default function ProveedoresClient() {
 
   const { addNotification } = useNotification();
 
-  // Inicializamos la API solo en el cliente
-  const api = createApi((msg) => alert(msg));
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -37,7 +34,7 @@ export default function ProveedoresClient() {
     };
 
     fetchData();
-  }, [api, addNotification]);
+  }, [addNotification]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -66,7 +63,9 @@ export default function ProveedoresClient() {
     }
   };
 
-  if (loading) return <div className="py-10 text-center text-gray-500">Cargando proveedores...</div>;
+  if (loading) {
+    return <div className="py-10 text-center text-gray-500">Cargando proveedores...</div>;
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -98,7 +97,12 @@ export default function ProveedoresClient() {
           />
         </div>
         <div className="pt-2">
-          <button onClick={agregarProveedor} className="btn btn-primary">Guardar</button>
+          <button
+            onClick={agregarProveedor}
+            className="btn btn-primary"
+          >
+            Guardar
+          </button>
         </div>
       </div>
 
