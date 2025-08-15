@@ -1,17 +1,5 @@
+import ProveedoresWrapper from "./ProveedoresWrapper";
 
-
-import LoadingPage from "@/components/LoadingPage";
-import dynamic from "next/dynamic";
-
-
-const ProveedoresClient = dynamic(
-  () => import("@/components/ProveedoresClient"),
-  {
-    ssr: false,
-    loading: () => <LoadingPage />,
-  }
-);
-
-export default function ProveedoresWrapper() {
-  return <ProveedoresClient />;
+export default function Page() {
+  return <ProveedoresWrapper />;
 }
