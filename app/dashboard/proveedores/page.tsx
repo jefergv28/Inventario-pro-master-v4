@@ -1,4 +1,4 @@
-"use client"; // Esto lo hace un componente cliente
+
 
 import LoadingPage from "@/components/LoadingPage";
 import dynamic from "next/dynamic";
