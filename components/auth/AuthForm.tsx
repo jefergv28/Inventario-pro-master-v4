@@ -11,7 +11,8 @@ import SocialAuth from "./SocialAuth";
 import Cookie from "js-cookie";
 import api from "@/app/hooks/useApi";
 import Modal from "../modal/Modal"; // Ajusta la ruta si es necesario
-import ForgotPasswordForm from "@/app/auth/ForgotPasswordForm/page";
+import ForgotPasswordForm from "../ForgotPasswordForm";
+
 
 
 type AuthFormProps = {
